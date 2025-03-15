@@ -1,2 +1,6 @@
-# UI-for-Reminder-Page
-The Reminder Page UI is a clean, mobile-friendly interface for managing medication schedules. It features a header with navigation icons, a medication list displaying name, dosage, and time, and a "+ Add Reminder" button for easy additions. With a simple layout and accessible design, it ensures a seamless experience for users of all age groups
+# Age Well
+The AgeWell App is designed to streamline elderly care management by integrating automated notifications, health tracking, and centralized medical records into a user-friendly system. The app improves compliance with healthcare standards (HIPAA & GDPR) and provides caregivers with real-time access to patient health status, reducing risks associated with manual record-keeping.!
+Elderly care facilities face significant challenges in managing patient health records, medication schedules, and emergency response systems. Many existing solutions lack real-time monitoring, efficient caregiver coordination, and proper adherence to healthcare regulations. This leads to missed medications, delayed interventions, and ineffective communication between caregivers, family members, and healthcare professionals.
+
+
+
