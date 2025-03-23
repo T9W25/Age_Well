@@ -14,17 +14,21 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ UPDATE user vitals
+// ✅ UPDATE or CREATE user vitals
 router.put("/:userId", verifyToken, async (req, res) => {
   try {
+    console.log("🔄 Received update request for user:", req.params.userId, req.body.vitals);
+
     const updatedVitals = await Vitals.findOneAndUpdate(
       { userId: req.params.userId },
       { $set: req.body.vitals },
-      { new: true, upsert: true }
+      { new: true, upsert: true } // ✅ Creates vitals if they don’t exist
     );
 
+    console.log("✅ Vitals successfully updated:", updatedVitals);
     res.json({ message: "Vitals updated successfully!", updatedVitals });
   } catch (error) {
+    console.error("❌ Server Error:", error);
     res.status(500).json({ message: "Server error", error });
   }
 });

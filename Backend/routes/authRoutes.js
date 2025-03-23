@@ -16,6 +16,33 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
+// ✅ Get User Health Details
+router.get("/:userId", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select("-password"); // Exclude password
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// ✅ Update User Health Details
+router.put("/:userId", verifyToken, async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      { $set: req.body },
+      { new: true }
+    ).select("-password"); // Return updated user without password
+
+    res.json({ message: "Health details updated!", updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 // ✅ Register User
 router.post("/register", async (req, res) => {
   try {

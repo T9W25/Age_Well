@@ -1,28 +1,54 @@
 const cron = require("node-cron");
 const Prescription = require("../models/Prescription");
 const User = require("../models/User");
+const sendPushNotification = require("./sendNotification");
 
-// ✅ Function to send notifications (For now, just log them)
-const sendNotification = (user, prescription) => {
-  console.log(`🔔 Reminder for ${user.name}: Take ${prescription.medicationName} (${prescription.dosage}) at ${prescription.time}`);
+// Define time slots
+const timeSlots = [
+  "08:00", "09:00",  // Morning
+  "12:00", "13:00",  // Afternoon
+  "18:00", "19:00"   // Evening
+];
 
-  // TODO: Send email, SMS, or push notification
-};
-
-// ✅ Scheduler: Runs every minute to check reminders
+// ✅ Run every minute to check for medication reminders
 cron.schedule("* * * * *", async () => {
   console.log("🔄 Checking for medication reminders...");
 
   const now = new Date();
-  const currentTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
-  const currentDay = now.toLocaleString("en-US", { weekday: "long" });
+  const currentTime = now.toLocaleTimeString("en-US", { hour12: false }).slice(0, 5);
+  const today = now.toLocaleString("en-US", { weekday: "long" });
 
-  const prescriptions = await Prescription.find({ time: currentTime, days: currentDay });
+  if (timeSlots.includes(currentTime)) {
+    try {
+      const prescriptions = await Prescription.find({ time: currentTime, days: today });
 
-  for (const prescription of prescriptions) {
-    const user = await User.findById(prescription.userId);
-    if (user) sendNotification(user, prescription);
+      for (let prescription of prescriptions) {
+        const user = await User.findById(prescription.userId);
+        if (!user) continue;
+
+        const { medicationName, dosage } = prescription;
+
+        // ✅ Store notification in MongoDB (for UI display)
+        await User.findByIdAndUpdate(user._id, {
+          $push: {
+            notifications: { 
+              message: `💊 Take your ${medicationName} (${dosage})!`, 
+              time: new Date(),
+              read: false
+            }
+          }
+        });
+
+        // ✅ Send push notification to app
+        await sendPushNotification(user.notificationToken, {
+          title: "💊 Medication Reminder",
+          body: `It's time to take your ${medicationName} (${dosage})!`
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error sending notifications:", error);
+    }
   }
 });
 
-module.exports = cron;
+console.log("✅ Medication reminder system is running...");
