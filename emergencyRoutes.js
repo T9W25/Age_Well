@@ -15,7 +15,7 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Add Emergency Contact
+// ✅ Add Emergency Contactt
 router.post("/:userId", verifyToken, async (req, res) => {
   try {
     const { name, phone, relationship } = req.body;
