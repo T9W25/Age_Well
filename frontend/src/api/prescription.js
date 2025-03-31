@@ -1,14 +1,19 @@
 import axios from "axios";
 
-const API = axios.create({ baseURL: "http://localhost:5000/api/prescriptions" });
+const BASE_URL = "http://localhost:5000/api/prescriptions";
 
 export const getPrescriptions = async (userId) => {
-  try {
-    const res = await API.get(`/${userId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
-    return res.data;
-  } catch (error) {
-    return [];
-  }
+  const token = localStorage.getItem("token");
+  const res = await axios.get(`${BASE_URL}/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};
+
+export const markMedicationTaken = async (prescriptionId) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.post(`${BASE_URL}/mark-taken/${prescriptionId}`, null, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
 };

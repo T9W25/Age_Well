@@ -1,25 +1,40 @@
 const mongoose = require("mongoose");
 
-const VitalsSchema = new mongoose.Schema({
-  heartRate: Number,
-  bloodSugar: String,
-  bloodPressure: String,
-  glucoseLevel: String,
-  recordedAt: { type: Date, default: Date.now } // ✅ Timestamp for tracking history
+const EmergencyContactSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  relationship: { type: String, required: true },
 });
 
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  profilePicture: { type: String, default: "" }, // ✅ Profile image support
+  name: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ["elderly", "caregiver", "healthcare", "family", "admin"],
+    required: true
+  },
+
+  // ✅ Health Info
   age: Number,
-  height: String,
-  weight: String,
-  bloodType: String,
-  allergies: [String],
-  medicalConditions: [String],
-  vitals: [VitalsSchema], // ✅ Store vitals over time for tracking
+  height: String,      // e.g., "170 cm"
+  weight: String,      // e.g., "70 kg"
+  bloodType: String,   // e.g., "O+"
+  allergies: String,   // comma-separated input string
+  medicalConditions: String, // comma-separated input string
+  profilePicture: String,
+
+  vitals: {
+    heartRate: String,
+    bloodPressure: String,
+    bloodSugar: String,
+    glucoseLevel: String
+  },
+
+  emergencyContacts: [EmergencyContactSchema],
+  assignedElderly: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  assignedFamilyMember: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
 });
 
 module.exports = mongoose.model("User", UserSchema);

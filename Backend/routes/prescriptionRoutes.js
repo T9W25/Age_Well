@@ -59,4 +59,28 @@ router.get("/public/all", async (req, res) => {
   }
 });
 
+// ✅ Mark Medication as Taken
+router.put("/taken/:prescriptionId", verifyToken, async (req, res) => {
+  try {
+    const { prescriptionId } = req.params;
+
+    const prescription = await Prescription.findById(prescriptionId);
+    if (!prescription) return res.status(404).json({ message: "Prescription not found" });
+
+    // ✅ Ensure only the assigned elderly user can update this
+    if (req.user.id !== prescription.userId.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    prescription.taken = true;
+    prescription.takenAt = new Date();
+    await prescription.save();
+
+    res.json({ message: "Medication marked as taken!", prescription });
+  } catch (error) {
+    console.error("❌ Error marking medication as taken:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
 module.exports = router;

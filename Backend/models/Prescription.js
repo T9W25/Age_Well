@@ -8,6 +8,8 @@ const PrescriptionSchema = new mongoose.Schema({
   time: { type: String, required: true }, // "08:00 AM"
   days: [{ type: String }], // ["Monday", "Wednesday", "Friday"]
   notificationMethod: { type: String, enum: ["email", "sms", "web"], default: "web" }, 
+  taken: { type: Boolean, default: false },  // ✅ New field: Has it been taken?
+  takenAt: { type: Date },  // ✅ Timestamp for when it was taken
 });
 
 module.exports = mongoose.model("Prescription", PrescriptionSchema);
