@@ -1,172 +1,176 @@
-📚 AgeWell Test Documentation Manual
+# 📝 AgeWell Test Documentation Manual  
+**Version**: 1.0  
+**Date**: April 2, 2025  
 
-Version: 1.0
-Date: April 2, 2025
+---
 
-⸻
+## ✅ User Story-Based Test Plan  
 
-✅ User Story-Based Test Plan
+---
 
-⸻
+### 🏡 **User Story 1: As an Elderly User, I want to have daily check-ins**  
 
-👵 User Story 1: As an Elderly User, I Want to Have Daily Check-ins
+**Acceptance Criteria:**  
+- Elderly users receive a daily check-in prompt.  
+- Users can confirm their well-being with a simple "I'm okay" button.  
+- Caregivers are notified if a check-in is missed.  
 
-Acceptance Criteria:
-	•	Elderly users receive a daily check-in prompt.
-	•	Users can confirm their well-being.
-	•	If no response, an alert is triggered.
+#### 🧪 Test Cases  
 
-✅ Test Cases
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-001 | Open app in the morning         | Daily check-in prompt appears        |
+| TC-002 | Tap "I'm okay"                   | Status updated, no notification sent |
+| TC-003 | No response after threshold     | Caregiver notified                   |
 
-ID	        Test Case	                           Expected Result
+---
 
-TC-001 |	Elderly user receives check-in prompt |	Notification received
-TC-002 |	User confirms well-being	          | Status updated in DB
-TC-003 |	User ignores check-in	              | Alert triggered
+### 💊 **User Story 2: As an Elderly User, I want to receive medication notifications**  
 
+**Acceptance Criteria:**  
+- Users receive reminders for scheduled medications.  
+- Notifications should be persistent until acknowledged.  
+- Caregivers are alerted if a dose is missed.  
 
+#### 🧪 Test Cases  
 
-⸻
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-004 | Medication due                   | Notification appears                  |
+| TC-005 | Acknowledge reminder             | Marked as taken, no further alerts   |
+| TC-006 | No action after threshold        | Caregiver receives alert              |
 
-💊 User Story 2: As an Elderly User, I Want to Receive Medication Notifications
+---
 
-Acceptance Criteria:
-	•	System sends reminders for scheduled medication.
-	•	Users can confirm medication intake.
-	•	If missed, caregiver is notified.
+### 🚨 **User Story 3: As an Elderly User, I want to immediately contact for emergency**  
 
-✅ Test Cases
+**Acceptance Criteria:**  
+- Users have a one-tap emergency button.  
+- The emergency contact receives a call or alert.  
+- Location details are included in the alert.  
 
-ID	        Test Case	                                Expected Result
+#### 🧪 Test Cases  
 
-TC-004 |	Medication notification sent on schedule |	User receives alert
-TC-005 |	Elderly confirms medication taken	     |   Status updated
-TC-006 |	Elderly misses medication	             |   Caregiver notified
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-007 | Tap emergency button             | Emergency contact is called          |
+| TC-008 | Tap emergency button (no response) | SMS alert with location is sent |
+| TC-009 | Check emergency logs             | Recent alerts are stored in history  |
 
+---
 
+### 🔑 **User Story 4: As an Administrator, I want to manage user accounts and permissions**  
 
-⸻
+**Acceptance Criteria:**  
+- Admins can create, edit, and remove user accounts.  
+- Role-based access controls apply to users.  
+- Account status can be changed (active/inactive).  
 
-⚡ User Story 3: As an Elderly User, I Want to Immediately Contact for Emergency
+#### 🧪 Test Cases  
 
-Acceptance Criteria:
-	•	Emergency button available in the app.
-	•	Clicking triggers an alert to caregivers.
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-010 | Admin logs in                    | Redirected to Admin Dashboard        |
+| TC-011 | Create a new user                 | Account appears in user list         |
+| TC-012 | Assign caregiver role             | Role updated in system               |
+| TC-013 | Disable an account                | User cannot log in                   |
 
-✅ Test Cases
+---
 
-ID	        Test Case	                                    Expected Result
+### ❤️ **User Story 5: As an Elderly User, I want to check my vital signs**  
 
-TC-007 |	Elderly presses emergency button	         |  Caregiver alerted
-TC-008 |	Alert details include location and user info |	Data sent correctly
+**Acceptance Criteria:**  
+- Users can manually enter vital sign data.  
+- Connected health devices sync automatically.  
+- Alerts trigger for abnormal readings.  
 
+#### 🧪 Test Cases  
 
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-014 | Open "Vitals" section            | Current vitals displayed             |
+| TC-015 | Enter blood pressure manually    | Saved to health history              |
+| TC-016 | Sync with smartwatch             | Data updates automatically           |
+| TC-017 | Abnormal reading detected        | Alert sent to caregiver              |
 
-⸻
+---
 
-👤 User Story 4: As an Administrator, I Want to Manage User Accounts and Permissions
+### 🍽 **User Story 6: As a Primary Caregiver, I want to CRUD Elderly Diet Plans**  
 
-Acceptance Criteria:
-	•	Admin can modify user roles and permissions.
-	•	Admin can deactivate/reactivate accounts.
+**Acceptance Criteria:**  
+- Caregivers can create, update, and delete diet plans.  
+- Elderly users can view but not modify the plan.  
 
-✅ Test Cases
+#### 🧪 Test Cases  
 
-ID	        Test Case	                    Expected Result
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-018 | Open Diet Plan section           | Current diet plan is visible         |
+| TC-019 | Add a new diet plan              | Plan appears in elderly’s UI         |
+| TC-020 | Edit meal details                | Updates reflected in UI & DB         |
+| TC-021 | Elderly tries to modify plan     | Access denied                        |
 
-TC-009 |	Admin changes user role	     |  Role updated
-TC-010 |	Admin deactivates an account |	User access revoked
-TC-011 |	Admin reactivates an account |	Access restored
+---
 
+### 📅 **User Story 7: As a Primary Caregiver, I want to CRUD Schedules**  
 
+**Acceptance Criteria:**  
+- Caregivers can create, update, and delete schedules.  
+- Elderly users and family can view schedules.  
 
-⸻
+#### 🧪 Test Cases  
 
-📊 User Story 5: As an Elderly User, I Want to Check Vital Signs
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-022 | Open Schedules page              | List of schedules is visible         |
+| TC-023 | Add a new schedule               | Schedule appears in elderly’s UI     |
+| TC-024 | Modify an existing schedule      | Updates saved                        |
+| TC-025 | Delete a schedule                | Entry removed from UI and DB         |
 
-Acceptance Criteria:
-	•	Elderly users can input vital signs (BP, heart rate, etc.).
-	•	Data is stored and viewable.
+---
 
-✅ Test Cases
+### 💳 **User Story 8: As an Unregistered User, I want to explore monthly subscriptions and app features**  
 
-ID	        Test Case	                Expected Result
+**Acceptance Criteria:**  
+- Subscription plans are displayed without login.  
+- Users can browse features but not interact.  
+- Signup button is available for conversion.  
 
-TC-012 |	User enters vital signs |	Data stored in DB
-TC-013 |	User views past records |	Data displayed correctly
+#### 🧪 Test Cases  
 
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-026 | Open app without logging in      | Subscription plans are visible       |
+| TC-027 | Click on a feature (e.g., diet plan) | Prompt to sign up appears |
+| TC-028 | Click "Subscribe"                | Redirects to checkout page           |
 
+---
 
-⸻
+## 🔐 **Security & Authentication Tests**  
 
-🍽 User Story 6: As a Primary Caregiver, I Want to CRUD Elderly Diet Plan
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-029 | JWT included in API requests    | Backend verifies authentication     |
+| TC-030 | Unauthorized access attempt     | Redirected to login page            |
+| TC-031 | Admin modifies caregiver role   | Role updates correctly              |
 
-Acceptance Criteria:
-	•	Caregiver can create, update, read, and delete diet plans.
-	•	Elderly users can view, but not edit.
+---
 
-✅ Test Cases
+## 🎨 **User Interface & Mobile Responsiveness Tests**  
 
-ID	        Test Case	                Expected Result
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-032 | Open app on desktop              | Layout adapts to full screen        |
+| TC-033 | Open app on mobile               | Layout adjusts for small screens    |
+| TC-034 | Navigation between sections      | Smooth transitions between pages    |
+| TC-035 | Dark mode toggle                 | UI switches themes correctly        |
 
-TC-014 |	Caregiver adds diet plan |	Plan saved and listed
-TC-015 |	Caregiver updates plan	 |  Changes reflected
-TC-016 |	Elderly views plan	     |  Read-only access
-TC-017 |	Unauthorized user edits	 |  Access denied
+---
 
+## 🛠 **Post-Test Cleanup Steps**  
 
+- Delete test users from the database.  
+- Reset check-in and emergency logs.  
+- Verify API logs for any errors.  
 
-⸻
-
-🗓 User Story 7: As a Primary Caregiver, I Want to CURD Schedules
-
-Acceptance Criteria:
-	•	Caregiver can create, update, read, and delete schedules.
-	•	Elderly and family can view schedules.
-
-✅ Test Cases
-
-ID	        Test Case	                    Expected Result
-
-TC-018 |	Caregiver creates a schedule |	Schedule saved and displayed
-TC-019 |	Caregiver updates a schedule |	Changes applied
-TC-020 |	Caregiver deletes a schedule |	Removed from system
-TC-021 |	Elderly views schedule	     |  Read-only mode
-TC-022 |	Unauthorized user modifies	 |  Access denied
-
-
-
-⸻
-
-📅 User Story 8: As an Unregistered User, I Want to Explore Monthly Subscriptions and App Features
-
-Acceptance Criteria:
-	•	Unregistered users can browse available subscription plans.
-	•	Users can view a feature list before registering.
-
-✅ Test Cases
-
-ID	        Test Case	                                  Expected Result
-      
-TC-023 |	Unregistered user visits pricing page	   |  Subscription plans displayed
-TC-024 |	Unregistered user views feature list	   |  Features listed
-TC-025 |	Unregistered user tries restricted feature |  Redirected to sign-up page
-
-
-
-⸻
-
-🔒 Security Notes
-	•	JWT tokens secured in localStorage.
-	•	Backend routes protected via verifyToken middleware.
-	•	Role-based access control enforced.
-
-⸻
-
-🧹 Cleanup Steps (Post-Test)
-	•	Clear dummy users from database.
-	•	Reset test schedules and diet plans.
-	•	Remove test emergency alerts.
-
-⸻
-
+---
