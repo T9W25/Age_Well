@@ -1,45 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { getPrescriptions } from "../api/prescription";
+import { getPrescriptions, markMedicationTaken } from "../api/prescription";
 import { 
-  Container, Card, CardContent, Typography, List, ListItem, CircularProgress 
+  Container, Card, CardContent, Typography, List, ListItem, CircularProgress, Checkbox 
 } from "@mui/material";
 
 const MedicationView = ({ user }) => {
   const [prescriptions, setPrescriptions] = useState([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPrescriptions = async () => {
-      if (!user || !user._id) {
-        console.error("❌ User is not defined, skipping prescription fetch.");
-        setLoading(false); // Stop loading if user is not available
-        return;
-      }
-
       try {
         const data = await getPrescriptions(user._id);
         setPrescriptions(data);
       } catch (error) {
         console.error("❌ Error fetching prescriptions:", error);
       } finally {
-        setLoading(false); // Stop loading after fetching data
+        setLoading(false);
       }
     };
 
-    if (user) {
-      fetchPrescriptions();
-    }
+    if (user) fetchPrescriptions();
   }, [user]);
 
-  // ✅ Prevent crash: Show loading until user is ready
-  if (!user) {
-    return (
-      <Container maxWidth="sm" sx={{ textAlign: "center", marginTop: 5 }}>
-        <CircularProgress /> 
-        <Typography variant="body1">Loading user data...</Typography>
-      </Container>
-    );
-  }
+  const handleMarkAsTaken = async (prescriptionId) => {
+    try {
+      await markMedicationTaken(prescriptionId);
+      setPrescriptions(prev =>
+        prev.map(p => (p._id === prescriptionId ? { ...p, taken: true } : p))
+      );
+    } catch (error) {
+      console.error("❌ Error marking medication as taken:", error);
+    }
+  };
 
   return (
     <Container maxWidth="sm">
@@ -47,14 +40,10 @@ const MedicationView = ({ user }) => {
         Medication Schedule
       </Typography>
 
-      {/* ✅ Show loading indicator while fetching prescriptions */}
       {loading ? (
-        <Container sx={{ textAlign: "center", marginTop: 3 }}>
-          <CircularProgress />
-          <Typography variant="body1">Loading prescriptions...</Typography>
-        </Container>
+        <CircularProgress />
       ) : prescriptions.length === 0 ? (
-        <Typography variant="body1" align="center">No prescriptions available.</Typography>
+        <Typography>No prescriptions available.</Typography>
       ) : (
         <List>
           {prescriptions.map((prescription, index) => (
@@ -65,6 +54,16 @@ const MedicationView = ({ user }) => {
                   <Typography variant="body2">Dosage: {prescription.dosage}</Typography>
                   <Typography variant="body2">Time: {prescription.time}</Typography>
                   <Typography variant="body2">Days: {prescription.days.join(", ")}</Typography>
+
+                  {/* ✅ Checkbox to mark as taken */}
+                  <Checkbox
+                    checked={prescription.taken}
+                    onChange={() => handleMarkAsTaken(prescription._id)}
+                    disabled={prescription.taken}
+                  />
+                  <Typography variant="body2" color={prescription.taken ? "green" : "red"}>
+                    {prescription.taken ? "✔ Taken" : "❌ Not Taken"}
+                  </Typography>
                 </CardContent>
               </Card>
             </ListItem>

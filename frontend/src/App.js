@@ -17,8 +17,13 @@ import FamilyDashboard from "./pages/FamilyDashboard";
 import HealthcareDashboard from "./pages/HealthcareDashboard";
 import ScheduleView from "./pages/ScheduleView";
 import PrivateRoute from "./components/PrivateRoute";
+import ContactUs from "./pages/ContactUs";
+import HomePage from "./pages/HomePage";
+import AboutUs from "./pages/AboutUs";
+import DemoMode from "./pages/DemoMode";
+import PricingPage from "./pages/PricingPage"; 
 
-// ✅ Wrappers to pass params into components expecting elderlyId
+// Wrappers for routes with params
 const DietPlanWrapper = () => {
   const { elderlyId } = useParams();
   return <DietPlan elderlyId={elderlyId} />;
@@ -37,7 +42,6 @@ function App() {
     setUser(null);
   };
 
-  // ✅ Role-based redirection after login
   const redirectByRole = () => {
     switch (user?.role) {
       case "elderly":
@@ -60,34 +64,36 @@ function App() {
       {user && <Sidebar handleLogout={handleLogout} user={user} />}
 
       <Routes>
-        {/* Public Route */}
-        <Route path="/" element={user ? <Navigate to={redirectByRole()} /> : <LoginPage setUser={setUser} />} />
-        <Route path="/view-schedule" element={user ? <ScheduleView user={user} /> : <Navigate to="/" />} />
+        {/* PUBLIC ROUTES */}
+        <Route path="/" element={user ? <Navigate to={redirectByRole()} /> : <HomePage />} />
+        <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/demo" element={<DemoMode />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/view-schedule" element={<ScheduleView user={user} />} />
 
-        {/* Elderly */}
+        {/* ELDERLY ROUTES */}
         <Route path="/dashboard" element={<PrivateRoute user={user} roles={["elderly"]}><Dashboard /></PrivateRoute>} />
         <Route path="/medications" element={<PrivateRoute user={user} roles={["elderly"]}><MedicationView /></PrivateRoute>} />
-        <Route path="/health-details" element={<PrivateRoute user={user} roles={["elderly"]}><HealthDetails /></PrivateRoute>} />
+        <Route path="/health-details" element={<PrivateRoute user={user} roles={["elderly"]}><HealthDetails user={user} /></PrivateRoute>} />
         <Route path="/daily-checkin" element={<PrivateRoute user={user} roles={["elderly"]}><DailyCheckIn /></PrivateRoute>} />
-        <Route path="/emergency" element={<PrivateRoute user={user} roles={["elderly"]}><EmergencyContacts user={user} /></PrivateRoute>} />
+        <Route path="/emergency-contacts" element={<PrivateRoute user={user} roles={["elderly"]}><EmergencyContacts user={user} /></PrivateRoute>} />
+        <Route path="/emergency" element={<Navigate to="/emergency-contacts" replace />} />
 
-        {/* Caregiver */}
+        {/* CAREGIVER ROUTES */}
         <Route path="/caregiver-dashboard" element={<PrivateRoute user={user} roles={["caregiver"]}><CaregiverDashboard user={user} /></PrivateRoute>} />
         <Route path="/caregiver/:elderlyId/diet" element={<PrivateRoute user={user} roles={["caregiver"]}><DietPlanWrapper /></PrivateRoute>} />
         <Route path="/caregiver/:elderlyId/schedule" element={<PrivateRoute user={user} roles={["caregiver"]}><ScheduleWrapper /></PrivateRoute>} />
-        <Route path="/search-elderly" element={
-  <PrivateRoute user={user} roles={["caregiver"]}>
-    <ElderlySearch user={user} />
-  </PrivateRoute>
-} />
+        <Route path="/search-elderly" element={<PrivateRoute user={user} roles={["caregiver"]}><ElderlySearch user={user} /></PrivateRoute>} />
 
-        {/* Family */}
+        {/* FAMILY */}
         <Route path="/family-dashboard" element={<PrivateRoute user={user} roles={["family"]}><FamilyDashboard /></PrivateRoute>} />
 
-        {/* Healthcare */}
+        {/* HEALTHCARE */}
         <Route path="/healthcare-dashboard" element={<PrivateRoute user={user} roles={["healthcare"]}><HealthcareDashboard /></PrivateRoute>} />
 
-        {/* Admin */}
+        {/* ADMIN */}
         <Route path="/admin-dashboard" element={<PrivateRoute user={user} roles={["admin"]}><AdminDashboard /></PrivateRoute>} />
       </Routes>
     </>

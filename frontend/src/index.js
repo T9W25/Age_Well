@@ -4,7 +4,8 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import App from "./App";
 import theme from "./theme"; // Material-UI Theme
-import AuthProvider from "./context/AuthContext"; // Authentication Context
+import { AuthProvider } from "./context/AuthContext";
+ // Authentication Context
 import reportWebVitals from "./reportWebVitals";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import "./index.css"; // Global Styles

@@ -1,3 +1,4 @@
+// backend/models/User.js
 const mongoose = require("mongoose");
 
 const EmergencyContactSchema = new mongoose.Schema({
@@ -13,28 +14,29 @@ const UserSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ["elderly", "caregiver", "healthcare", "family", "admin"],
-    required: true
+    required: true,
   },
 
-  // ✅ Health Info
+  // Health Info
   age: Number,
-  height: String,      // e.g., "170 cm"
-  weight: String,      // e.g., "70 kg"
-  bloodType: String,   // e.g., "O+"
-  allergies: String,   // comma-separated input string
-  medicalConditions: String, // comma-separated input string
+  height: String,
+  weight: String,
+  bloodType: String,
+  allergies: [String],
+  medicalConditions: [String],
   profilePicture: String,
 
   vitals: {
     heartRate: String,
     bloodPressure: String,
     bloodSugar: String,
-    glucoseLevel: String
+    glucoseLevel: String,
   },
 
   emergencyContacts: [EmergencyContactSchema],
+
   assignedElderly: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  assignedFamilyMember: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  assignedFamilyMember: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 module.exports = mongoose.model("User", UserSchema);

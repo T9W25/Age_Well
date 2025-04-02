@@ -4,8 +4,8 @@ const User = require("../models/User");
 const verifyToken = require("../middleware/authMiddleware");
 const verifyRole = require("../middleware/roleMiddleware"); // 🔹 Import Role Middleware
 
-// ✅ Get Emergency Contacts (Accessible by Caregivers, Family Members & Admins)
-router.get("/:userId", verifyToken, verifyRole(["caregiver", "family", "admin"]), async (req, res) => {
+// ✅ Get Emergency Contacts (Accessible by Caregivers, Family Members, Elderly & Admins)
+router.get("/:userId", verifyToken, verifyRole(["caregiver", "elderly", "family", "admin"]), async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select("emergencyContacts");
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -16,7 +16,7 @@ router.get("/:userId", verifyToken, verifyRole(["caregiver", "family", "admin"])
   }
 });
 
-// routes/caregiverRoutes.js
+// ✅ Accept Caregiver & Add to Emergency Contacts
 router.post("/accept-caregiver/:caregiverId", verifyToken, async (req, res) => {
   try {
     const elderly = await User.findById(req.user.id);
@@ -24,12 +24,10 @@ router.post("/accept-caregiver/:caregiverId", verifyToken, async (req, res) => {
 
     if (!elderly || elderly.role !== "elderly") return res.status(403).json({ message: "Only elderly can accept." });
 
-    // Add caregiver to assigned list
     caregiver.assignedElderly = caregiver.assignedElderly || [];
     caregiver.assignedElderly.push(elderly._id);
     await caregiver.save();
 
-    // Optional: Add to emergency contacts
     elderly.emergencyContacts.push({
       name: caregiver.name,
       phone: caregiver.phone || "N/A",
@@ -43,7 +41,6 @@ router.post("/accept-caregiver/:caregiverId", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // ✅ Add Emergency Contact (Only Elderly Users Can Add)
 router.post("/:userId", verifyToken, verifyRole(["elderly"]), async (req, res) => {

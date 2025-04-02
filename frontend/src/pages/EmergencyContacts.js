@@ -1,130 +1,142 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import {
-  Container, Typography, TextField, Button, List, ListItem, IconButton, Alert, CircularProgress
+  Container,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  Grid,
+  Alert,
+  IconButton
 } from "@mui/material";
-import { Delete, Call, Report } from "@mui/icons-material";
-import { AuthContext } from "../context/AuthContext"; // ✅ Import AuthContext
+import { Delete, Call } from "@mui/icons-material";
+import { AuthContext } from "../context/AuthContext";
 
 const EmergencyContacts = () => {
-  const { user } = useContext(AuthContext); // ✅ Get user from AuthContext
+  const { user } = useContext(AuthContext);
   const [contacts, setContacts] = useState([]);
   const [newContact, setNewContact] = useState({ name: "", phone: "", relationship: "" });
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    if (!user || !user._id) {
-      setError("User ID is missing.");
-      return;
-    }
-
-    const fetchContacts = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/emergency/${user._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContacts(res.data);
-      } catch (error) {
-        setError("Failed to load contacts.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchContacts();
-  }, [user, token]);
-
-  const addContact = async () => {
-    if (!user?._id) {
-      setError("User ID is missing.");
-      return;
-    }
-
+  const fetchContacts = async () => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/emergency/${user._id}`, newContact, {
+      const res = await axios.get(`http://localhost:5000/api/emergency/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setContacts(res.data.emergencyContacts);
-      setSuccessMessage("Contact added!");
+      setContacts(res.data);
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+      setError("Failed to load emergency contacts.");
+    }
+  };
+
+  useEffect(() => {
+    console.log("🔍 AuthContext user:", user);
+    if (user?.id) fetchContacts();
+  }, [user, token]);
+
+  const handleAddContact = async () => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/emergency/${user.id}`,
+        newContact,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setNewContact({ name: "", phone: "", relationship: "" });
-    } catch (error) {
+      setSuccess("Contact added successfully.");
+      fetchContacts();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Error adding contact:", err);
       setError("Failed to add contact.");
     }
   };
 
-  const deleteContact = async (contactId) => {
+  const handleDeleteContact = async (contactId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/emergency/${user._id}/${contactId}`, {
+      await axios.delete(`http://localhost:5000/api/emergency/${user.id}/${contactId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setContacts(contacts.filter((c) => c._id !== contactId));
-      setSuccessMessage("Contact removed!");
-    } catch (error) {
-      setError("Failed to remove contact.");
-    }
-  };
-
-  // ✅ Open phone dialer when clicking a contact
-  const handleCall = (phone) => {
-    window.location.href = `tel:${phone}`;
-  };
-
-  // ✅ Trigger Emergency Alert (Backend API)
-  const triggerEmergencyAlert = async () => {
-    try {
-      await axios.post("http://localhost:5000/api/emergency/alert", { userId: user._id }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      new Audio("/alert.mp3").play(); // ✅ Play emergency alert sound
-      alert("🚨 Emergency alert sent to all contacts!");
-    } catch (error) {
-      alert("❌ Failed to send emergency alert.");
+      setSuccess("Contact deleted.");
+      fetchContacts();
+    } catch (err) {
+      console.error("Error deleting contact:", err);
+      setError("Failed to delete contact.");
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" sx={{ textAlign: "center", fontWeight: "bold", marginBottom: 3 }}>
-        🚨 Emergency Contacts
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Emergency Contacts
       </Typography>
 
       {error && <Alert severity="error">{error}</Alert>}
-      {successMessage && <Alert severity="success">{successMessage}</Alert>}
+      {success && <Alert severity="success">{success}</Alert>}
 
-      {/* ✅ Emergency Alert Button */}
-      <Button
-        variant="contained"
-        color="error"
-        fullWidth
-        onClick={triggerEmergencyAlert}
-        sx={{ marginBottom: 2 }}
-        startIcon={<Report />}
-      >
-        Send Emergency Alert 🚨
-      </Button>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12}>
+          <TextField
+            label="Name"
+            fullWidth
+            value={newContact.name}
+            onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Phone"
+            fullWidth
+            value={newContact.phone}
+            onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Relationship"
+            fullWidth
+            value={newContact.relationship}
+            onChange={(e) => setNewContact({ ...newContact, relationship: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button variant="contained" onClick={handleAddContact} sx={{ mr: 2 }}>
+            Add Contact
+          </Button>
+          <Button variant="outlined" onClick={fetchContacts}>
+            Load Contacts
+          </Button>
+        </Grid>
+      </Grid>
 
-      {/* ✅ Add Contact Form */}
-      <TextField fullWidth label="Name" value={newContact.name} onChange={(e) => setNewContact({ ...newContact, name: e.target.value })} sx={{ marginBottom: 2 }} />
-      <TextField fullWidth label="Phone" value={newContact.phone} onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })} sx={{ marginBottom: 2 }} />
-      <TextField fullWidth label="Relationship" value={newContact.relationship} onChange={(e) => setNewContact({ ...newContact, relationship: e.target.value })} sx={{ marginBottom: 2 }} />
-      <Button variant="contained" fullWidth onClick={addContact} sx={{ marginBottom: 2 }}>Add Contact</Button>
-
-      {/* ✅ Contacts List */}
-      {loading ? <CircularProgress sx={{ display: "block", margin: "0 auto" }} /> : (
-        <List>
-          {contacts.map((contact) => (
-            <ListItem key={contact._id} sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography>{contact.name} - {contact.phone} ({contact.relationship})</Typography>
-              <div>
-                <IconButton color="primary" onClick={() => handleCall(contact.phone)}><Call /></IconButton>
-                <IconButton color="error" onClick={() => deleteContact(contact._id)}><Delete /></IconButton>
-              </div>
-            </ListItem>
-          ))}
-        </List>
-      )}
+      {contacts.map((contact) => (
+        <Card key={contact._id} sx={{ mb: 2 }}>
+          <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <Typography variant="h6">{contact.name}</Typography>
+              <Typography>{contact.phone}</Typography>
+              <Typography variant="body2" color="text.secondary">{contact.relationship}</Typography>
+            </div>
+            <div>
+              <IconButton
+                component="a"
+                href={`tel:${contact.phone}`}
+                color="primary"
+              >
+                <Call />
+              </IconButton>
+              <IconButton onClick={() => handleDeleteContact(contact._id)} color="error">
+                <Delete />
+              </IconButton>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </Container>
   );
 };

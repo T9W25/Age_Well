@@ -1,88 +1,153 @@
 import React, { useState } from "react";
-import { 
-  Container, TextField, Button, Typography, Card, CardContent, IconButton, InputAdornment, CircularProgress
+import {
+  TextField, Button, Typography, Card, CardContent,
+  IconButton, InputAdornment, CircularProgress, Box,
+  Select, MenuItem, FormControl, InputLabel
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import logoBg from "../assets/Agewell_logo.jpg"; // ✅ Ensure this is correct
 
 const LoginPage = ({ setUser }) => {
   const navigate = useNavigate();
-  const [isRegister, setIsRegister] = useState(false); // Toggle between login & register
-  const [name, setName] = useState(""); // Only used for registration
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Password visibility state
-  const [loading, setLoading] = useState(false); // Loading state
-  const [errorMessage, setErrorMessage] = useState(""); // Error message state
+  const [role, setRole] = useState("elderly"); // ✅ Default role for register
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleAuth = async () => {
-    const url = isRegister ? "http://localhost:5000/api/auth/register" : "http://localhost:5000/api/auth/login";
-    const data = isRegister ? { name, email, password } : { email, password };
-    
-    setLoading(true); // Start loading
-    setErrorMessage(""); // Clear previous errors
+    const url = isRegister
+      ? "http://localhost:5000/api/auth/register"
+      : "http://localhost:5000/api/auth/login";
+
+    const data = isRegister
+      ? { name, email, password, role }
+      : { email, password };
+
+    setLoading(true);
+    setErrorMessage("");
 
     try {
       const res = await axios.post(url, data);
-      console.log("Login Response:", res.data);
 
-      if (setUser) {  
+      if (setUser) {
         setUser(res.data.user);
         localStorage.setItem("token", res.data.token);
-        navigate("/daily-checkin");
-      } else {
-        console.error("❌ setUser is undefined!");
+        localStorage.setItem("role", res.data.user.role);
+
+        // ✅ Redirect based on role
+        const userRole = res.data.user.role;
+        switch (userRole) {
+          case "elderly":
+            navigate("/daily-checkin");
+            break;
+          case "caregiver":
+            navigate("/caregiver-dashboard");
+            break;
+          case "family":
+            navigate("/family-dashboard");
+            break;
+          case "healthcare":
+            navigate("/healthcare-dashboard");
+            break;
+          case "admin":
+            navigate("/admin-dashboard");
+            break;
+          default:
+            navigate("/");
+        }
       }
     } catch (error) {
       console.error("Login Error:", error.response?.data || error);
       setErrorMessage(error.response?.data?.message || "Authentication failed!");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="xs" sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <Card sx={{ padding: "20px", textAlign: "center", width: "100%" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundImage: `url(${logoBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Card
+        sx={{
+          padding: 3,
+          width: "90%",
+          maxWidth: 400,
+          backgroundColor: "rgba(255, 255, 255, 0.2)", // transparent white
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+        }}
+      >
         <CardContent>
-          <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom align="center">
             {isRegister ? "Register" : "Login"}
           </Typography>
 
-          {/* Show Error Message if Authentication Fails */}
           {errorMessage && (
-            <Typography color="error" sx={{ marginBottom: 2 }}>
+            <Typography color="error" sx={{ mb: 2 }}>
               {errorMessage}
             </Typography>
           )}
 
           {isRegister && (
-            <TextField 
-              fullWidth 
-              label="Name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              sx={{ marginBottom: 2 }} 
-            />
+            <>
+              <TextField
+                fullWidth
+                label="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={role}
+                  label="Role"
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <MenuItem value="elderly">Elderly</MenuItem>
+                  <MenuItem value="caregiver">Caregiver</MenuItem>
+                  <MenuItem value="healthcare">Healthcare Professional</MenuItem>
+                  <MenuItem value="family">Family Member</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                </Select>
+              </FormControl>
+            </>
           )}
 
-          <TextField 
-            fullWidth 
-            label="Email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            sx={{ marginBottom: 2 }} 
+          <TextField
+            fullWidth
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            sx={{ mb: 2 }}
           />
 
-          {/* Password Field with Visibility Toggle */}
           <TextField
             fullWidth
             label="Password"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            sx={{ marginBottom: 2 }}
+            sx={{ mb: 2 }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -94,26 +159,28 @@ const LoginPage = ({ setUser }) => {
             }}
           />
 
-          {/* Login/Register Button */}
-          <Button 
-            variant="contained" 
-            fullWidth 
-            onClick={handleAuth} 
-            sx={{ marginBottom: 2 }} 
-            disabled={loading} // Disable while loading
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleAuth}
+            disabled={loading}
+            sx={{ mb: 2 }}
           >
-            {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : (isRegister ? "Register" : "Login")}
+            {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : isRegister ? "Register" : "Login"}
           </Button>
 
-          <Typography variant="body2">
+          <Typography variant="body2" align="center">
             {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
-            <span style={{ color: "blue", cursor: "pointer" }} onClick={() => setIsRegister(!isRegister)}>
+            <span
+              style={{ color: "#1976d2", cursor: "pointer" }}
+              onClick={() => setIsRegister(!isRegister)}
+            >
               {isRegister ? "Login" : "Register"}
             </span>
           </Typography>
         </CardContent>
       </Card>
-    </Container>
+    </Box>
   );
 };
 

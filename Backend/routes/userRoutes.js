@@ -41,7 +41,7 @@ router.put("/assign-elderly/:caregiverId", verifyToken, async (req, res) => {
 // PUT /api/users/:id - Update user health info
 router.put("/:id", verifyToken, async (req, res) => {
   try {
-    const userIdFromToken = req.user._id;
+    const userIdFromToken = req.user.id; // ✅ Use 'id' from token payload
     const targetUserId = req.params.id;
     const updates = req.body;
 
@@ -94,7 +94,5 @@ router.put("/:id", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
 
 module.exports = router;
