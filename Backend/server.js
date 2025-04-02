@@ -8,7 +8,11 @@ const checkMissedMedications = require("./jobs/checkMissedMedications");
 const app = express();
 
 // ✅ Middleware
-app.use(cors());
+app.use(cors({
+  origin: true, // allows all origins temporarily
+  credentials: true
+}));
+
 app.use(express.json());
 
 // ✅ Run every 50 minutes to check for missed medications
