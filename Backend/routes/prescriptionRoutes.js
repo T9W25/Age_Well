@@ -1,45 +1,11 @@
 const express = require("express");
+const router = express.Router();
 const Prescription = require("../models/Prescription");
 const verifyToken = require("../middleware/authMiddleware");
 
-const router = express.Router();
-
-// ✅ Create a new prescription (Only for Healthcare Professionals)
-router.post("/", verifyToken, async (req, res) => {
+// ✅ Get prescriptions by userId
+router.get("/user/:userId", verifyToken, async (req, res) => {
   try {
-    const { userId, medicationName, dosage, time, days, notificationMethod } = req.body;
-
-    // ✅ Ensure only healthcare professionals can add prescriptions
-    if (!req.user || req.user.role !== "healthcare") {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    const newPrescription = new Prescription({
-      userId,
-      doctorId: req.user.id,
-      medicationName,
-      dosage,
-      time, // Keep it in "HH:MM AM/PM" format
-      days,
-      notificationMethod,
-    });
-
-    await newPrescription.save();
-    res.status(201).json({ message: "Prescription saved!", prescription: newPrescription });
-  } catch (error) {
-    console.error("❌ Error saving prescription:", error);
-    res.status(500).json({ message: "Server error", error });
-  }
-});
-
-// ✅ Get prescriptions for a specific elderly user (User can fetch their own data)
-router.get("/:userId", verifyToken, async (req, res) => {
-  try {
-    // ✅ Allow user to get their own prescriptions
-    if (req.user.id !== req.params.userId && req.user.role !== "healthcare") {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
     const prescriptions = await Prescription.find({ userId: req.params.userId });
     res.json(prescriptions);
   } catch (error) {
@@ -48,37 +14,84 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Public API to fetch all prescriptions (for notifications, no token required)
-router.get("/public/all", async (req, res) => {
+// ✅ Create prescription (Healthcare only)
+router.post("/user/:userId", verifyToken, async (req, res) => {
   try {
-    const prescriptions = await Prescription.find();
-    res.json(prescriptions);
+    if (req.user.role !== "healthcare") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { medicationName, dosage, time, days, notificationMethod } = req.body;
+
+    // Validate required fields
+    if (!medicationName || !dosage || !time) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newPrescription = new Prescription({
+      userId: req.params.userId,
+      doctorId: req.user.id, // ✅ From token
+      medicationName,
+      dosage,
+      time,
+      days,
+      notificationMethod,
+      createdBy: req.user.id
+    });
+
+    await newPrescription.save();
+    res.status(201).json({ message: "Prescription added!", newPrescription });
   } catch (error) {
-    console.error("❌ Error fetching all prescriptions:", error);
+    console.error("❌ Error creating prescription:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+// ✅ Update prescription (Healthcare only)
+router.put("/user/:userId/:prescriptionId", verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== "healthcare") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const updated = await Prescription.findByIdAndUpdate(
+      req.params.prescriptionId,
+      { $set: req.body },
+      { new: true }
+    );
+
+    res.json({ message: "Prescription updated!", updated });
+  } catch (error) {
+    console.error("❌ Error updating prescription:", error);
     res.status(500).json({ message: "Server error", error });
   }
 });
 
-// ✅ Mark Medication as Taken
-router.put("/taken/:prescriptionId", verifyToken, async (req, res) => {
+// ✅ Delete prescription (Healthcare only)
+router.delete("/user/:userId/:prescriptionId", verifyToken, async (req, res) => {
   try {
-    const { prescriptionId } = req.params;
-
-    const prescription = await Prescription.findById(prescriptionId);
-    if (!prescription) return res.status(404).json({ message: "Prescription not found" });
-
-    // ✅ Ensure only the assigned elderly user can update this
-    if (req.user.id !== prescription.userId.toString()) {
+    if (req.user.role !== "healthcare") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    prescription.taken = true;
-    prescription.takenAt = new Date();
-    await prescription.save();
-
-    res.json({ message: "Medication marked as taken!", prescription });
+    await Prescription.findByIdAndDelete(req.params.prescriptionId);
+    res.json({ message: "Prescription deleted!" });
   } catch (error) {
-    console.error("❌ Error marking medication as taken:", error);
+    console.error("❌ Error deleting prescription:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// ✅ Elderly marking as taken
+router.put("/mark-taken/:prescriptionId", verifyToken, async (req, res) => {
+  try {
+    const prescription = await Prescription.findById(req.params.prescriptionId);
+    if (!prescription) return res.status(404).json({ message: "Prescription not found" });
+
+    prescription.taken = true;
+    await prescription.save();
+    res.json({ message: "Medication marked as taken" });
+  } catch (error) {
+    console.error("❌ Error marking medication:", error);
     res.status(500).json({ message: "Server error", error });
   }
 });

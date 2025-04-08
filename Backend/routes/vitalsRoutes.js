@@ -14,6 +14,16 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/history/:userId", verifyToken, async (req, res) => {
+  try {
+    const vitals = await Vitals.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(vitals);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch vitals history", error });
+  }
+});
+
+
 // ✅ UPDATE or CREATE user vitals
 router.put("/:userId", verifyToken, async (req, res) => {
   try {

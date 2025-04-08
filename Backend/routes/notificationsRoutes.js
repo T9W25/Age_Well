@@ -99,4 +99,60 @@ router.post("/test", async (req, res) => {
   }
 });
 
+// 🚨 Send emergency alert to caregiver + family
+// 🚨 Send emergency alert to caregiver + family + elderly
+router.post("/emergency-alert/:elderlyId", verifyToken, async (req, res) => {
+  try {
+    const elderly = await User.findById(req.params.elderlyId)
+      .populate("assignedCaregiver assignedFamilyMember");
+
+    if (!elderly || elderly.role !== "elderly") {
+      return res.status(404).json({ message: "Elderly user not found" });
+    }
+
+    const recipients = [];
+
+    // Notify Caregiver
+    if (elderly.assignedCaregiver) {
+      recipients.push({
+        userId: elderly.assignedCaregiver._id,
+        title: "🚨 Emergency Alert",
+        message: `${elderly.name} triggered an emergency alert!`,
+      });
+    }
+
+    // Notify Family Member
+    if (elderly.assignedFamilyMember) {
+      recipients.push({
+        userId: elderly.assignedFamilyMember._id,
+        title: "🚨 Emergency Alert",
+        message: `${elderly.name} triggered an emergency alert!`,
+      });
+    }
+
+    // Notify Elderly themself (optional)
+    recipients.push({
+      userId: elderly._id,
+      title: "🔔 Emergency Alert Sent",
+      message: "Your emergency alert has been dispatched to your caregiver and family.",
+    });
+
+    const created = await Notification.insertMany(
+      recipients.map((r) => ({
+        userId: r.userId,
+        title: r.title,
+        message: r.message,
+        type: "emergency",
+        read: false,
+      }))
+    );
+
+    res.status(200).json({ message: "Emergency alert sent", notifications: created });
+  } catch (err) {
+    console.error("❌ Failed to send emergency alert:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;

@@ -1,89 +1,79 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api";
 import {
   Container,
-  Card,
-  CardContent,
   Typography,
   List,
   ListItem,
+  ListItemText,
   Button,
-  Box,
-  Grid,
+  CircularProgress,
+  Card,
+  CardContent,
+  Avatar,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 
 const CaregiverDashboard = ({ user }) => {
-  const [elderlyUsers, setElderlyUsers] = useState([]);
+  const [assignedElderly, setAssignedElderly] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user?._id) return;
-  
-    const fetchElderlyUsers = async () => {
+    const fetchAssignedElderly = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/users/elderly-under-caregiver/${user._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setElderlyUsers(res.data);
+        const res = await api.get("/api/caregiver/my-elderly", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setAssignedElderly(res.data);
       } catch (error) {
-        console.error("❌ Error fetching elderly users:", error);
+        console.error("Error fetching assigned elderly:", error);
+      } finally {
+        setLoading(false);
       }
     };
-  
-    fetchElderlyUsers();
-  }, [user]);
-  
-
-  const goToPage = (elderlyId, type) => {
-    navigate(`/caregiver/${elderlyId}/${type}`);
-  };
+    fetchAssignedElderly();
+  }, []);
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" align="center" gutterBottom>
-        My Assigned Elderly Users
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        👥 My Assigned Elderly Users
       </Typography>
 
-      <List>
-        {elderlyUsers.map((elderly) => (
-          <ListItem key={elderly._id}>
-            <Card sx={{ width: "100%", padding: 2 }}>
-              <CardContent>
-                <Typography variant="h6">{elderly.name}</Typography>
-                <Typography>Email: {elderly.email}</Typography>
-                <Typography>Health Status: {elderly.healthStatus || "No data"}</Typography>
-
-                <Box sx={{ marginTop: 2 }}>
-                  <Grid container spacing={2}>
-                    <Grid item>
-                      <Button
-                        variant="contained"
-                        onClick={() => goToPage(elderly._id, "diet")}
-                      >
-                        View Diet Plan
-                      </Button>
-                    </Grid>
-                    <Grid item>
-                      <Button
-                        variant="outlined"
-                        onClick={() => goToPage(elderly._id, "schedule")}
-                      >
-                        View Schedule
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </CardContent>
-            </Card>
-          </ListItem>
-        ))}
-      </List>
+      {loading ? (
+        <CircularProgress />
+      ) : assignedElderly.length === 0 ? (
+        <Typography>No elderly users assigned yet.</Typography>
+      ) : (
+        <List>
+          {assignedElderly.map((elderly) => (
+            <ListItem key={elderly._id || elderly.id} disableGutters>
+              <Card sx={{ width: "100%", mb: 2 }}>
+                <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Avatar
+                    src={elderly.profilePicture || ""}
+                    sx={{ width: 56, height: 56, mr: 2 }}
+                  >
+                    {elderly.name?.charAt(0).toUpperCase() || "👤"}
+                  </Avatar>
+                  <ListItemText
+                    primary={<Typography variant="h6">{elderly.name}</Typography>}
+                    secondary={elderly.email}
+                    sx={{ flex: 1 }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate(`/elderly/${elderly._id || elderly.id}`)}
+                  >
+                    View Details
+                  </Button>
+                </CardContent>
+              </Card>
+            </ListItem>
+          ))}
+        </List>
+      )}
     </Container>
   );
 };

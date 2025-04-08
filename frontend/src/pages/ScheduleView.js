@@ -2,35 +2,36 @@ import React, { useEffect, useState } from "react";
 import {
   Container,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  CircularProgress,
   Card,
   CardContent,
+  Grid,
+  CircularProgress,
+  Alert,
+  Box
 } from "@mui/material";
-import axios from "axios";
+import EventIcon from "@mui/icons-material/Event";
+import api from "../api";
 
 const ScheduleView = ({ user }) => {
-  const [schedules, setSchedules] = useState([]);
+  const [groupedSchedules, setGroupedSchedules] = useState({ caregiver: [], healthcare: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchSchedules = async () => {
+      const userId = user?._id || user?.id;
+      if (!userId) return;
+
+
       try {
-        if (!user) return;
-
-        const userId = user.role === "family" ? user.assignedFamilyMember : user._id;
-
-        const res = await axios.get(`http://localhost:5000/api/schedules/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+        const res = await api.get(`/api/schedule/view-all/${userId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        setSchedules(res.data);
-      } catch (error) {
-        console.error("❌ Error fetching schedules:", error);
+        setGroupedSchedules(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching schedules:", err);
+        setError("Failed to load schedules.");
       } finally {
         setLoading(false);
       }
@@ -39,43 +40,53 @@ const ScheduleView = ({ user }) => {
     fetchSchedules();
   }, [user]);
 
-  if (!user) {
-    return (
-      <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
-        <CircularProgress />
-        <Typography>Loading user...</Typography>
-      </Container>
+  const renderScheduleCards = (schedules) =>
+    schedules.length === 0 ? (
+      <Typography>No schedules found.</Typography>
+    ) : (
+      schedules.map((schedule) => (
+        <Card key={schedule._id} sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6">{schedule.title}</Typography>
+            <Typography variant="body2">{schedule.description}</Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <EventIcon sx={{ fontSize: 18, mr: 1 }} />
+              {schedule.date} at {schedule.time}
+            </Typography>
+          </CardContent>
+        </Card>
+      ))
     );
-  }
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom align="center">
-        My Care Schedule
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        📅 View Schedule
       </Typography>
 
       {loading ? (
-        <Container sx={{ textAlign: "center", mt: 4 }}>
-          <CircularProgress />
-        </Container>
-      ) : schedules.length === 0 ? (
-        <Typography align="center">No schedules found.</Typography>
+        <CircularProgress />
+      ) : error ? (
+        <Alert severity="error">{error}</Alert>
       ) : (
-        <List>
-          {schedules.map((schedule) => (
-            <ListItem key={schedule._id}>
-              <Card sx={{ width: "100%" }}>
-                <CardContent>
-                  <Typography variant="h6">{schedule.title}</Typography>
-                  <Typography variant="body2">{schedule.description}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(schedule.date).toLocaleDateString()} at {schedule.time}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </ListItem>
-          ))}
-        </List>
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ border: "1px solid #ccc", borderRadius: 2, p: 2, background: "#f9f9f9" }}>
+              <Typography variant="h6" gutterBottom align="center">
+                👤 Caregiver's Schedules
+              </Typography>
+              {renderScheduleCards(groupedSchedules.caregiver)}
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ border: "1px solid #ccc", borderRadius: 2, p: 2, background: "#f9f9f9" }}>
+              <Typography variant="h6" gutterBottom align="center">
+                👨‍⚕️ Healthcare's Schedules
+              </Typography>
+              {renderScheduleCards(groupedSchedules.healthcare)}
+            </Box>
+          </Grid>
+        </Grid>
       )}
     </Container>
   );

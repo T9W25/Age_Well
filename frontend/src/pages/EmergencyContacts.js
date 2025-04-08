@@ -1,17 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import {
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  Grid,
-  Alert,
-  IconButton
+  Container, Typography, Button, Card, CardContent,
+  TextField, Grid, Alert, IconButton, Tooltip
 } from "@mui/material";
-import { Delete, Call } from "@mui/icons-material";
+import { Delete, Call, WarningAmber } from "@mui/icons-material";
 import { AuthContext } from "../context/AuthContext";
 
 const EmergencyContacts = () => {
@@ -24,7 +17,7 @@ const EmergencyContacts = () => {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/emergency/${user.id}`, {
+      const res = await api.get(`/api/emergency/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setContacts(res.data);
@@ -35,19 +28,14 @@ const EmergencyContacts = () => {
   };
 
   useEffect(() => {
-    console.log("🔍 AuthContext user:", user);
     if (user?.id) fetchContacts();
   }, [user, token]);
 
   const handleAddContact = async () => {
     try {
-      const res = await axios.post(
-        `http://localhost:5000/api/emergency/${user.id}`,
-        newContact,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await api.post(`/api/emergency/${user.id}`, newContact, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setNewContact({ name: "", phone: "", relationship: "" });
       setSuccess("Contact added successfully.");
       fetchContacts();
@@ -60,7 +48,7 @@ const EmergencyContacts = () => {
 
   const handleDeleteContact = async (contactId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/emergency/${user.id}/${contactId}`, {
+      await api.delete(`/api/emergency/${user.id}/${contactId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess("Contact deleted.");
@@ -71,11 +59,39 @@ const EmergencyContacts = () => {
     }
   };
 
+  const triggerEmergencyAlert = async () => {
+    try {
+      await api.post(`/api/notifications/emergency-alert/${user.id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSuccess("Emergency alert sent!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("Failed to send emergency alert:", err);
+      setError("Could not send emergency alert.");
+    }
+  };
+
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Emergency Contacts
       </Typography>
+
+      <Tooltip title="Trigger Emergency Alert">
+        <IconButton
+          onClick={triggerEmergencyAlert}
+          sx={{
+            color: "#fbc02d",
+            backgroundColor: "#fff3cd",
+            border: "2px solid #fbc02d",
+            marginBottom: 2,
+            float: "right"
+          }}
+        >
+          <WarningAmber fontSize="large" />
+        </IconButton>
+      </Tooltip>
 
       {error && <Alert severity="error">{error}</Alert>}
       {success && <Alert severity="success">{success}</Alert>}
@@ -123,11 +139,7 @@ const EmergencyContacts = () => {
               <Typography variant="body2" color="text.secondary">{contact.relationship}</Typography>
             </div>
             <div>
-              <IconButton
-                component="a"
-                href={`tel:${contact.phone}`}
-                color="primary"
-              >
+              <IconButton component="a" href={`tel:${contact.phone}`} color="primary">
                 <Call />
               </IconButton>
               <IconButton onClick={() => handleDeleteContact(contact._id)} color="error">

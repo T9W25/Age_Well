@@ -12,7 +12,7 @@ const Dashboard = () => {
       description: "View your scheduled medications.",
       icon: <Medication sx={{ fontSize: 40, color: "#F57C00" }} />,
       buttonText: "GO TO MEDICATIONS",
-      path: "/medications",
+      path: "/medication-view",
     },
     {
       title: "Health Details",

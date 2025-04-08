@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import Sidebar from "./components/Sidebar";
 import ElderlySearch from "./pages/ElderlySearch"; 
@@ -22,6 +23,7 @@ import HomePage from "./pages/HomePage";
 import AboutUs from "./pages/AboutUs";
 import DemoMode from "./pages/DemoMode";
 import PricingPage from "./pages/PricingPage"; 
+import ElderlyDetails from "./pages/ElderlyDetails";
 
 // Wrappers for routes with params
 const DietPlanWrapper = () => {
@@ -36,11 +38,17 @@ const ScheduleWrapper = () => {
 
 function App() {
   const { user, setUser } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setUser(null);
+    navigate("/login?loggedOut=true"); 
   };
+
+  const isProtectedRoute = !["/", "/login", "/about", "/contact", "/demo", "/pricing"].includes(location.pathname);
 
   const redirectByRole = () => {
     switch (user?.role) {
@@ -61,12 +69,16 @@ function App() {
 
   return (
     <>
-      {user && <Sidebar handleLogout={handleLogout} user={user} />}
+      {user && isProtectedRoute && <Sidebar handleLogout={handleLogout} user={user} />}
+
 
       <Routes>
         {/* PUBLIC ROUTES */}
-        <Route path="/" element={user ? <Navigate to={redirectByRole()} /> : <HomePage />} />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route path="/" element={<HomePage />} />
+        <Route
+        path="/login"
+        element={<LoginPage key={location.key} setUser={setUser} />}
+        />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/demo" element={<DemoMode />} />
@@ -83,9 +95,11 @@ function App() {
 
         {/* CAREGIVER ROUTES */}
         <Route path="/caregiver-dashboard" element={<PrivateRoute user={user} roles={["caregiver"]}><CaregiverDashboard user={user} /></PrivateRoute>} />
+        <Route path="/elderly/:id" element={<ElderlyDetails />} />
         <Route path="/caregiver/:elderlyId/diet" element={<PrivateRoute user={user} roles={["caregiver"]}><DietPlanWrapper /></PrivateRoute>} />
         <Route path="/caregiver/:elderlyId/schedule" element={<PrivateRoute user={user} roles={["caregiver"]}><ScheduleWrapper /></PrivateRoute>} />
-        <Route path="/search-elderly" element={<PrivateRoute user={user} roles={["caregiver"]}><ElderlySearch user={user} /></PrivateRoute>} />
+        <Route path="/search-elderly" element={<PrivateRoute user={user} roles={["caregiver"]}><ElderlySearch user={user} /></PrivateRoute>} /><Route path="/elderly/:id" element={<ElderlyDetails />} />
+
 
         {/* FAMILY */}
         <Route path="/family-dashboard" element={<PrivateRoute user={user} roles={["family"]}><FamilyDashboard /></PrivateRoute>} />

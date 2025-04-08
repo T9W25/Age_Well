@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, Button, Paper
 } from "@mui/material";
-import axios from "axios";
+import api from "../api";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -13,7 +13,7 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/users", {
+      const res = await api.get("/api/admin/users", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setUsers(res.data);
@@ -24,8 +24,8 @@ const AdminDashboard = () => {
 
   const updateUserStatus = async (userId, status) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/status`,
+      await api.put(
+        `/api/admin/users/${userId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -54,7 +54,7 @@ const AdminDashboard = () => {
           </TableHead>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user._id}>
+              <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
                       <Button
                         size="small"
                         color="success"
-                        onClick={() => updateUserStatus(user._id, "approved")}
+                        onClick={() => updateUserStatus(user.id, "approved")}
                         sx={{ mr: 1 }}
                       >
                         Approve
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
                       <Button
                         size="small"
                         color="error"
-                        onClick={() => updateUserStatus(user._id, "rejected")}
+                        onClick={() => updateUserStatus(user.id, "rejected")}
                       >
                         Reject
                       </Button>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api";
+import HealthRecords from "./HealthRecords";
+import TrendsChart from "./TrendsChart"; // (You'll create this separately)
 import {
   Container,
   Typography,
@@ -13,20 +15,22 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  IconButton
+  IconButton,
+  Tabs,
+  Tab,
+  Box
 } from "@mui/material";
 import { ExpandMore, Person, CloudUpload } from "@mui/icons-material";
 
-const HealthDetails = () => {
-  const [userId, setUserId] = useState(null);
+const HealthDetails = ({ user }) => {
   const [healthInfo, setHealthInfo] = useState({
     name: "",
     age: "",
     height: "",
     weight: "",
     bloodType: "",
-    allergies: "",
-    medicalConditions: "",
+    allergies: [],
+    medicalConditions: [],
     profilePicture: "",
     vitals: {
       heartRate: "",
@@ -35,29 +39,18 @@ const HealthDetails = () => {
       glucoseLevel: "",
     },
   });
-
+  const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [vitalsMessage, setVitalsMessage] = useState("");
   const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    if (token) {
-      try {
-        const base64Payload = token.split('.')[1];
-        const decoded = JSON.parse(atob(base64Payload));
-        setUserId(decoded.id);
-      } catch (err) {
-        console.error("Token decode error:", err);
-      }
-    }
-  }, [token]);
+  const userId = user?._id || user?.id;
 
   useEffect(() => {
     const fetchHealthInfo = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/health/${userId}`, {
+        const res = await api.get(`/api/health/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHealthInfo({
@@ -67,7 +60,9 @@ const HealthDetails = () => {
             bloodPressure: "",
             bloodSugar: "",
             glucoseLevel: "",
-          }
+          },
+          allergies: res.data.allergies || [],
+          medicalConditions: res.data.medicalConditions || []
         });
       } catch (error) {
         console.error("Error fetching health info:", error);
@@ -87,8 +82,8 @@ const HealthDetails = () => {
     }
 
     try {
-      await axios.put(
-        `http://localhost:5000/api/health/${userId}`,
+      await api.put(
+        `/api/health/${userId}`,
         {
           age: healthInfo.age,
           height: healthInfo.height,
@@ -114,7 +109,7 @@ const HealthDetails = () => {
 
   const updateVitals = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/vitals/${userId}`, { vitals: healthInfo.vitals }, {
+      await api.put(`/api/vitals/${userId}`, { vitals: healthInfo.vitals }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setVitalsMessage("Vitals updated successfully!");
@@ -150,42 +145,57 @@ const HealthDetails = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
 
-      <Card sx={{ mt: 2, borderRadius: "10px" }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>Basic Info</Typography>
-          <TextField fullWidth label="Full Name" value={healthInfo.name} onChange={(e) => setHealthInfo({ ...healthInfo, name: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="Age (years)" value={healthInfo.age} onChange={(e) => setHealthInfo({ ...healthInfo, age: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="Height (cm)" value={healthInfo.height} onChange={(e) => setHealthInfo({ ...healthInfo, height: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="Weight (kg)" value={healthInfo.weight} onChange={(e) => setHealthInfo({ ...healthInfo, weight: e.target.value })} sx={{ mb: 2 }} />
-          <TextField fullWidth label="Blood Type (e.g. A+, B-, O+)" value={healthInfo.bloodType} onChange={(e) => setHealthInfo({ ...healthInfo, bloodType: e.target.value })} sx={{ mb: 2 }} />
-        </CardContent>
-      </Card>
+      <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered>
+        <Tab label="Basic Info" />
+        <Tab label="Vitals" />
+        <Tab label="Health Records" />
+        <Tab label="Trends" />
+      </Tabs>
 
-      <Accordion sx={{ mt: 2 }}>
-        <AccordionSummary expandIcon={<ExpandMore />}><Typography variant="h6">Vitals Overview</Typography></AccordionSummary>
-        <AccordionDetails>
-          {vitalsMessage && <Alert severity="info" sx={{ mb: 2 }}>{vitalsMessage}</Alert>}
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Heart Rate (bpm)" value={healthInfo.vitals.heartRate} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, heartRate: e.target.value } })} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Blood Pressure (mmHg)" value={healthInfo.vitals.bloodPressure} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, bloodPressure: e.target.value } })} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Blood Sugar (mg/dL)" value={healthInfo.vitals.bloodSugar} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, bloodSugar: e.target.value } })} />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Glucose Level (mg/dL)" value={healthInfo.vitals.glucoseLevel} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, glucoseLevel: e.target.value } })} />
-            </Grid>
-          </Grid>
-          <Button variant="outlined" sx={{ mt: 2 }} onClick={updateVitals}>Save Vitals</Button>
-        </AccordionDetails>
-      </Accordion>
+      <Box sx={{ mt: 2 }}>
+        {tab === 0 && (
+          <Card sx={{ mt: 2, borderRadius: "10px" }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>Basic Info</Typography>
+              <TextField fullWidth label="Full Name" value={healthInfo.name} onChange={(e) => setHealthInfo({ ...healthInfo, name: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Age (years)" value={healthInfo.age} onChange={(e) => setHealthInfo({ ...healthInfo, age: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Height (cm)" value={healthInfo.height} onChange={(e) => setHealthInfo({ ...healthInfo, height: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Weight (kg)" value={healthInfo.weight} onChange={(e) => setHealthInfo({ ...healthInfo, weight: e.target.value })} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Blood Type (e.g. A+, B-, O+)" value={healthInfo.bloodType} onChange={(e) => setHealthInfo({ ...healthInfo, bloodType: e.target.value })} sx={{ mb: 2 }} />
+              <Button fullWidth variant="contained" sx={{ mt: 1 }} onClick={updateHealthInfo}>
+                Save Health Details
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-      <Button fullWidth variant="contained" sx={{ mt: 3 }} onClick={updateHealthInfo}>
-        Save Health Details
-      </Button>
+        {tab === 1 && (
+          <Accordion expanded>
+            <AccordionSummary expandIcon={<ExpandMore />}><Typography variant="h6">Vitals Overview</Typography></AccordionSummary>
+            <AccordionDetails>
+              {vitalsMessage && <Alert severity="info" sx={{ mb: 2 }}>{vitalsMessage}</Alert>}
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField fullWidth label="Heart Rate (bpm)" value={healthInfo.vitals.heartRate} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, heartRate: e.target.value } })} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField fullWidth label="Blood Pressure (mmHg)" value={healthInfo.vitals.bloodPressure} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, bloodPressure: e.target.value } })} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField fullWidth label="Blood Sugar (mg/dL)" value={healthInfo.vitals.bloodSugar} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, bloodSugar: e.target.value } })} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField fullWidth label="Glucose Level (mg/dL)" value={healthInfo.vitals.glucoseLevel} onChange={(e) => setHealthInfo({ ...healthInfo, vitals: { ...healthInfo.vitals, glucoseLevel: e.target.value } })} />
+                </Grid>
+              </Grid>
+              <Button variant="outlined" sx={{ mt: 2 }} onClick={updateVitals}>Save Vitals</Button>
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        {tab === 2 && <HealthRecords user={user} />}
+        {tab === 3 && <TrendsChart user={user} />}
+      </Box>
     </Container>
   );
 };

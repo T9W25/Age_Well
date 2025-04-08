@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // ✅ Fix: added useEffect here
+import React, { useState, useEffect } from "react";
 import {
   Container,
   TextField,
@@ -15,7 +15,7 @@ import {
 import MuiAlert from "@mui/material/Alert";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 const ElderlySearch = ({ user }) => {
   const [query, setQuery] = useState("");
@@ -28,10 +28,9 @@ const ElderlySearch = ({ user }) => {
   const handleSearch = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `http://localhost:5000/api/caregiver/search-elderly?query=${query}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/caregiver/search-elderly?query=${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setResults(res.data);
     } catch (error) {
       console.error("❌ Error searching elderly users:", error);
@@ -40,7 +39,6 @@ const ElderlySearch = ({ user }) => {
     }
   };
 
-  // ✅ Auto search with debounce
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (query.trim()) {
@@ -48,16 +46,13 @@ const ElderlySearch = ({ user }) => {
       }
     }, 500);
     return () => clearTimeout(delayDebounce);
-  }, [query]); // eslint warning is okay to ignore here
+  }, [query]);
 
   const sendRequest = async (elderlyId) => {
     try {
-      await axios.post(
-        `http://localhost:5000/api/caregiver/request-elderly/${elderlyId}`,
-        {},
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-
+      await api.post(`/api/caregiver/request-elderly/${elderlyId}`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setSentRequests((prev) => [...prev, elderlyId]);
       setSnackbarMessage("✅ Request sent successfully!");
       setSnackbarOpen(true);
@@ -70,15 +65,11 @@ const ElderlySearch = ({ user }) => {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
-      {/* 🔙 Back button */}
       <Box display="flex" alignItems="center" mb={2}>
-        <IconButton onClick={() => navigate("/dashboard")}>
-          <ArrowBackIcon />
-        </IconButton>
+        <IconButton onClick={() => navigate("/dashboard")}> <ArrowBackIcon /> </IconButton>
         <Typography variant="h6">Search Elderly Users</Typography>
       </Box>
 
-      {/* 🔍 Search Field */}
       <TextField
         fullWidth
         label="Search by name or email"
@@ -86,11 +77,8 @@ const ElderlySearch = ({ user }) => {
         onChange={(e) => setQuery(e.target.value)}
         sx={{ mb: 2 }}
       />
-      <Button variant="contained" fullWidth onClick={handleSearch}>
-        Search
-      </Button>
+      <Button variant="contained" fullWidth onClick={handleSearch}>Search</Button>
 
-      {/* 📢 Snackbar Feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -107,7 +95,6 @@ const ElderlySearch = ({ user }) => {
         </MuiAlert>
       </Snackbar>
 
-      {/* 👴 Search Results */}
       <List sx={{ mt: 3 }}>
         {results.length === 0 ? (
           <Typography align="center" color="text.secondary">

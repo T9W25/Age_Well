@@ -33,10 +33,19 @@ const UserSchema = new mongoose.Schema({
     glucoseLevel: String,
   },
 
+  chronicIllnesses: [String],
+  medications: [String],
+  surgeries: [String],
+  immunizations: [String],
+  diagnosisHistory: [String],
+  clinicalNotes: String,
   emergencyContacts: [EmergencyContactSchema],
 
   assignedElderly: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   assignedFamilyMember: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  assignedCaregiver: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  pendingFamilyRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
 });
 
 module.exports = mongoose.model("User", UserSchema);

@@ -35,4 +35,14 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
+router.get("/:userId", verifyToken, async (req, res) => {
+  try {
+    const checkIns = await CheckIn.find({ userId: req.params.userId }).sort({ date: -1 });
+    res.json(checkIns);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch check-ins", error });
+  }
+});
+
+
 module.exports = router;

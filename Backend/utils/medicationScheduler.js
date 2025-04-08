@@ -29,7 +29,7 @@ cron.schedule("* * * * *", async () => {
         const { medicationName, dosage } = prescription;
 
         // ✅ Store notification in MongoDB (for UI display)
-        await User.findByIdAndUpdate(user._id, {
+        await User.findByIdAndUpdate(user.id, {
           $push: {
             notifications: { 
               message: `💊 Take your ${medicationName} (${dosage})!`, 

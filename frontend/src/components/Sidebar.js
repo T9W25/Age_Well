@@ -18,15 +18,21 @@ import {
   Contacts,
   Logout,
   Favorite,
-  Search
+  Search as SearchIcon
 } from "@mui/icons-material";
-import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 
-const Sidebar = ({ handleLogout, user }) => {
+const Sidebar = ({ user }) => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login", {
+      state: { message: "✅ You have been logged out successfully." }
+    });
+  };
 
   const getMenuItems = () => {
     if (!user) return [];
@@ -46,7 +52,6 @@ const Sidebar = ({ handleLogout, user }) => {
         return [
           { text: "Caregiver Dashboard", icon: <Dashboard />, path: "/caregiver-dashboard" },
           { text: "Search Elderly", icon: <SearchIcon />, path: "/search-elderly" }
-
         ];
 
       case "admin":
@@ -83,7 +88,7 @@ const Sidebar = ({ handleLogout, user }) => {
             AgeWell
           </Typography>
 
-          {user && <NotificationBell userId={user._id} />}
+          {user && <NotificationBell userId={user.id} />}
 
           <IconButton edge="end" color="inherit" onClick={handleLogout}>
             <Logout />

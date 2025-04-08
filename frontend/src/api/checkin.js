@@ -1,11 +1,9 @@
-import axios from "axios";
-
-const API = axios.create({ baseURL: "http://localhost:5000/api/checkin" });
+import api from "../api";
 
 // ✅ Save a new check-in
 export const saveCheckIn = async (data) => {
   try {
-    const res = await API.post("/", data, {
+    const res = await api.post("/api/checkin", data, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     return res.data;
@@ -17,7 +15,7 @@ export const saveCheckIn = async (data) => {
 // ✅ Get user's check-in history
 export const getCheckIns = async () => {
   try {
-    const res = await API.get("/", {
+    const res = await api.get("/api/checkin", {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     return res.data;
