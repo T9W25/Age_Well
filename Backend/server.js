@@ -16,7 +16,7 @@ app.use(cors({
 app.use(express.json());
 
 // ✅ Run every 50 minutes to check for missed medications
-cron.schedule("*/10 * * * *", () => {
+cron.schedule("*/3 * * * *", () => {
   console.log("🕒 Checking for missed medications...");
   checkMissedMedications();
 });
