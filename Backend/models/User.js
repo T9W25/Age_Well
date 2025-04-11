@@ -32,6 +32,13 @@ const UserSchema = new mongoose.Schema({
   },
   emergencyContacts: [EmergencyContactSchema],
 
+  chronicIllnesses: [String],
+  clinicalNotes: String,
+  diagnosisHistory: [String],
+  immunizations: [String],
+  medications: [String],
+  surgeries: [String],
+
   assignedElderly: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   assignedFamilyMember: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   assignedCaregiver: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
