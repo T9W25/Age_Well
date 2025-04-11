@@ -16,7 +16,7 @@ app.use(cors({
 app.use(express.json());
 
 // ✅ Run every 50 minutes to check for missed medications
-cron.schedule("*/50 * * * *", () => {
+cron.schedule("*/10 * * * *", () => {
   console.log("🕒 Checking for missed medications...");
   checkMissedMedications();
 });
@@ -44,6 +44,9 @@ require("./utils/medicationTest");
 // require("./utils/medicationScheduler");
 
 // ✅ Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== "test") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
 
+module.exports = app;

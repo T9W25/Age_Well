@@ -20,7 +20,7 @@ const checkMissedMedications = async () => {
         message: `🚨 ${med.userId.name} missed their ${med.medicationName}! Check on them.`
       });
 
-      console.log(`🔔 Notification sent to ${caregiver.name} about ${med.userId.name}`);
+     
     }
   }
 };

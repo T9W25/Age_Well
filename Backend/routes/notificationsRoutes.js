@@ -52,6 +52,13 @@ router.post("/respond/:notificationId", verifyToken, async (req, res) => {
         await caregiver.save();
       }
 
+      const elderlyUser = await User.findById(req.user.id);
+      if (!elderlyUser.assignedCaregiver) {
+        elderlyUser.assignedCaregiver = caregiver._id;
+        await elderlyUser.save();
+      }
+
+
       // Optional: Set caregiver as emergency contact
       const user = await User.findById(req.user.id);
       const alreadyExists = user.emergencyContacts.some(ec => ec.phone === caregiver.phone);
@@ -99,7 +106,6 @@ router.post("/test", async (req, res) => {
   }
 });
 
-// 🚨 Send emergency alert to caregiver + family
 // 🚨 Send emergency alert to caregiver + family + elderly
 router.post("/emergency-alert/:elderlyId", verifyToken, async (req, res) => {
   try {
@@ -130,7 +136,6 @@ router.post("/emergency-alert/:elderlyId", verifyToken, async (req, res) => {
       });
     }
 
-    // Notify Elderly themself (optional)
     recipients.push({
       userId: elderly._id,
       title: "🔔 Emergency Alert Sent",

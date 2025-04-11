@@ -21,6 +21,8 @@ const NotificationBell = ({ userId }) => {
   useEffect(() => {
     if (!userId) return;
 
+    console.log("🔔 NotificationBell - userId in bell:", userId);
+
     const fetchNotifications = async () => {
       try {
         const res = await api.get(`/api/notifications/${userId}`, {
@@ -28,6 +30,7 @@ const NotificationBell = ({ userId }) => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
+        console.log("🔔 Notifications fetched:", res.data);
 
         const unread = res.data.filter((n) => !n.read);
 

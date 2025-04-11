@@ -24,6 +24,7 @@ import AboutUs from "./pages/AboutUs";
 import DemoMode from "./pages/DemoMode";
 import PricingPage from "./pages/PricingPage"; 
 import ElderlyDetails from "./pages/ElderlyDetails";
+import SystemPerformance from "./pages/SystemPerformance";
 
 // Wrappers for routes with params
 const DietPlanWrapper = () => {
@@ -109,6 +110,7 @@ function App() {
 
         {/* ADMIN */}
         <Route path="/admin-dashboard" element={<PrivateRoute user={user} roles={["admin"]}><AdminDashboard /></PrivateRoute>} />
+        <Route path="/system-performance" element={<PrivateRoute user={user} roles={["admin"]}><SystemPerformance /></PrivateRoute>} />
       </Routes>
     </>
   );

@@ -10,6 +10,8 @@ import {
   Typography,
   IconButton
 } from "@mui/material";
+import BarChartIcon from "@mui/icons-material/BarChart";
+
 import {
   Menu as MenuIcon,
   Dashboard,
@@ -56,7 +58,9 @@ const Sidebar = ({ user }) => {
 
       case "admin":
         return [
-          { text: "Admin Dashboard", icon: <Dashboard />, path: "/admin-dashboard" }
+          { text: "Admin Dashboard", icon: <Dashboard />, path: "/admin-dashboard" },
+          { text: "System Performance", icon: <BarChartIcon />, path: "/system-performance" }
+
         ];
 
       case "family":
