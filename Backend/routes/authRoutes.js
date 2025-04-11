@@ -6,7 +6,7 @@ const verifyToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-
+// ✅ Get Logged-in User Info (Frontend Calls This)
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -17,7 +17,7 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-
+// ✅ Get User Health Details
 router.get("/:userId", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select("-password");
@@ -30,7 +30,7 @@ router.get("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-
+// ✅ Update User Health Details
 router.put("/:userId", verifyToken, async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -46,7 +46,7 @@ router.put("/:userId", verifyToken, async (req, res) => {
   }
 });
 
-
+// ✅ Register User (with auto-login + debug logs)
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
