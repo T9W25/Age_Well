@@ -10,6 +10,7 @@ const PrescriptionSchema = new mongoose.Schema({
   notificationMethod: { type: String, enum: ["email", "sms", "web"], default: "web" }, 
   taken: { type: Boolean, default: false },  // ✅ New field: Has it been taken?
   takenAt: { type: Date },  // ✅ Timestamp for when it was taken
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 module.exports = mongoose.model("Prescription", PrescriptionSchema);

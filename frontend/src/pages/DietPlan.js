@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
-import { Container, Typography, TextField, Button, List, ListItem, IconButton, Alert, CircularProgress, Box } from "@mui/material";
+import api from "../api";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Alert,
+  CircularProgress,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+} from "@mui/material";
 import { Delete } from "@mui/icons-material";
 import { AuthContext } from "../context/AuthContext";
 
-const DietPlan = ({ user }) => {
-  const { user: loggedInUser } = useContext(AuthContext); // Get current user
+const DietPlan = ({ userId }) => {
+  const { user: loggedInUser } = useContext(AuthContext);
   const [dietPlan, setDietPlan] = useState([]);
   const [newMeal, setNewMeal] = useState({ meal: "", time: "", notes: "" });
   const [error, setError] = useState("");
@@ -14,14 +29,14 @@ const DietPlan = ({ user }) => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!user || !user._id) {
+    if (!userId) {
       setError("User ID is missing.");
       return;
     }
 
     const fetchDietPlan = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/diet/${user._id}`, {
+        const res = await api.get(`/api/diet/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setDietPlan(res.data);
@@ -32,7 +47,7 @@ const DietPlan = ({ user }) => {
       }
     };
     fetchDietPlan();
-  }, [user, token]);
+  }, [userId, token]);
 
   const addMeal = async () => {
     if (!loggedInUser || loggedInUser.role !== "caregiver") {
@@ -41,7 +56,7 @@ const DietPlan = ({ user }) => {
     }
 
     try {
-      const res = await axios.post(`http://localhost:5000/api/diet/${user._id}`, newMeal, {
+      const res = await api.post(`/api/diet/${userId}`, newMeal, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDietPlan([...dietPlan, res.data.newDiet]);
@@ -59,7 +74,7 @@ const DietPlan = ({ user }) => {
     }
 
     try {
-      await axios.delete(`http://localhost:5000/api/diet/${user._id}/${dietId}`, {
+      await api.delete(`/api/diet/${userId}/${dietId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDietPlan(dietPlan.filter((d) => d._id !== dietId));
@@ -70,45 +85,76 @@ const DietPlan = ({ user }) => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" align="center" sx={{ marginBottom: 2 }}>
-        🍽️ Diet Plan
-      </Typography>
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Card>
+        <CardContent>
+          <Typography variant="h4" align="center" gutterBottom>
+            🍽️ Diet Plan
+          </Typography>
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {successMessage && <Alert severity="success">{successMessage}</Alert>}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
 
-      {loading ? (
-        <CircularProgress sx={{ display: "block", margin: "20px auto" }} />
-      ) : (
-        <>
-          {/* Caregivers Can Add Meal */}
-          {loggedInUser?.role === "caregiver" && (
-            <Box sx={{ marginBottom: 3 }}>
-              <TextField fullWidth label="Meal" value={newMeal.meal} onChange={(e) => setNewMeal({ ...newMeal, meal: e.target.value })} sx={{ marginBottom: 1 }} />
-              <TextField fullWidth type="time" value={newMeal.time} onChange={(e) => setNewMeal({ ...newMeal, time: e.target.value })} sx={{ marginBottom: 1 }} />
-              <TextField fullWidth label="Notes (Optional)" value={newMeal.notes} onChange={(e) => setNewMeal({ ...newMeal, notes: e.target.value })} sx={{ marginBottom: 1 }} />
-              <Button fullWidth variant="contained" onClick={addMeal} sx={{ marginTop: 1 }}>
-                Add Meal
-              </Button>
-            </Box>
+          {loading ? (
+            <CircularProgress sx={{ display: "block", margin: "20px auto" }} />
+          ) : (
+            <>
+              {loggedInUser?.role === "caregiver" && (
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Meal"
+                    value={newMeal.meal}
+                    onChange={(e) => setNewMeal({ ...newMeal, meal: e.target.value })}
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    fullWidth
+                    type="time"
+                    value={newMeal.time}
+                    onChange={(e) => setNewMeal({ ...newMeal, time: e.target.value })}
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Notes (Optional)"
+                    value={newMeal.notes}
+                    onChange={(e) => setNewMeal({ ...newMeal, notes: e.target.value })}
+                    sx={{ mb: 2 }}
+                  />
+                  <Button fullWidth variant="contained" onClick={addMeal}>
+                    Add Meal
+                  </Button>
+                </Box>
+              )}
+
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Meal Schedule
+              </Typography>
+              <List>
+                {dietPlan.map((meal) => (
+                  <ListItem
+                    key={meal._id}
+                    secondaryAction={
+                      loggedInUser?.role === "caregiver" && (
+                        <IconButton color="error" onClick={() => deleteMeal(meal._id)}>
+                          <Delete />
+                        </IconButton>
+                      )
+                    }
+                  >
+                    <ListItemText
+                      primary={`${meal.meal} at ${meal.time}`}
+                      secondary={meal.notes}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </>
           )}
-
-          {/* Display Diet Plan */}
-          <List>
-            {dietPlan.map((meal) => (
-              <ListItem key={meal._id}>
-                {meal.meal} - {meal.time} {meal.notes && `(${meal.notes})`}
-                {loggedInUser?.role === "caregiver" && (
-                  <IconButton color="error" onClick={() => deleteMeal(meal._id)}>
-                    <Delete />
-                  </IconButton>
-                )}
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
+        </CardContent>
+      </Card>
     </Container>
   );
 };

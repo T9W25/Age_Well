@@ -1,19 +1,29 @@
-import axios from "axios";
+import api from "../api";
 
-const BASE_URL = "http://localhost:5000/api/prescriptions";
-
+// For healthcare CRUD
 export const getPrescriptions = async (userId) => {
-  const token = localStorage.getItem("token");
-  const res = await axios.get(`${BASE_URL}/${userId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+  const res = await api.get(`/api/prescriptions/user/${userId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
   return res.data;
 };
 
-export const markMedicationTaken = async (prescriptionId) => {
-  const token = localStorage.getItem("token");
-  const res = await axios.post(`${BASE_URL}/mark-taken/${prescriptionId}`, null, {
-    headers: { Authorization: `Bearer ${token}` }
+export const addPrescription = async (userId, data) => {
+  const res = await api.post(`/api/prescriptions/user/${userId}`, data, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.data;
+};
+
+export const deletePrescription = async (userId, prescriptionId) => {
+  await api.delete(`/api/prescriptions/user/${userId}/${prescriptionId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+};
+
+export const updatePrescription = async (userId, prescriptionId, data) => {
+  const res = await api.put(`/api/prescriptions/user/${userId}/${prescriptionId}`, data, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
   });
   return res.data;
 };

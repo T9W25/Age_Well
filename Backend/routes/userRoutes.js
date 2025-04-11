@@ -3,12 +3,26 @@ const router = express.Router();
 const User = require("../models/User");
 const verifyToken = require("../middleware/authMiddleware");
 
-// ✅ Assign elderly to caregiver
+// Search users by role and name
+router.get("/search", verifyToken, async (req, res) => {
+  try {
+    const { name = "", role = "elderly" } = req.query;
+    const query = {
+      role,
+      name: { $regex: name, $options: "i" },
+    };
+    const users = await User.find(query).select("-password");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// Assign elderly to caregiver
 router.put("/assign-elderly/:caregiverId", verifyToken, async (req, res) => {
   try {
     const { elderlyId } = req.body;
 
-    // Only caregiver or admin should be able to assign
     if (!["caregiver", "admin"].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -17,80 +31,130 @@ router.put("/assign-elderly/:caregiverId", verifyToken, async (req, res) => {
     const elderly = await User.findById(elderlyId);
 
     if (!caregiver || caregiver.role !== "caregiver") {
-      return res.status(404).json({ message: "Caregiver not found or invalid" });
+      return res.status(404).json({ message: "Caregiver not found" });
     }
 
     if (!elderly || elderly.role !== "elderly") {
-      return res.status(404).json({ message: "Elderly user not found or invalid" });
+      return res.status(404).json({ message: "Elderly user not found" });
     }
 
-    // Avoid duplicates
     if (!caregiver.assignedElderly.includes(elderlyId)) {
       caregiver.assignedElderly.push(elderlyId);
       await caregiver.save();
     }
 
-    res.status(200).json({ message: "Elderly assigned to caregiver successfully" });
+    res.json({ message: "Elderly assigned successfully" });
   } catch (error) {
-    console.error("❌ Error assigning elderly:", error);
     res.status(500).json({ message: "Server error", error });
   }
 });
 
-// ✅ Update user info
-// PUT /api/users/:id - Update user health info
+// Get user by ID
+router.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+});
+
+// Update user info
 router.put("/:id", verifyToken, async (req, res) => {
   try {
-    const userIdFromToken = req.user.id; // ✅ Use 'id' from token payload
-    const targetUserId = req.params.id;
     const updates = req.body;
+    const requesterId = req.user.id;
 
-    // ✅ Allow only self-update or admin/healthcare
-    if (
-      userIdFromToken !== targetUserId &&
-      !["admin", "healthcare"].includes(req.user.role)
-    ) {
+    if (requesterId !== req.params.id && !["admin", "healthcare"].includes(req.user.role)) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // ✅ Optional: Validate known fields (add/remove as needed)
     const allowedFields = [
-      "name", "age", "height", "weight", "bloodType",
+      "name", "email", "age", "height", "weight", "bloodType",
       "allergies", "medicalConditions", "profilePicture",
-      "vitals.heartRate", "vitals.bloodPressure",
-      "vitals.bloodSugar", "vitals.glucoseLevel"
+      "vitals.heartRate", "vitals.bloodPressure", "vitals.bloodSugar", "vitals.glucoseLevel",
+      "chronicIllnesses", "medications", "surgeries", "immunizations",
+      "diagnosisHistory", "clinicalNotes"
     ];
 
-    // Build update object
     const updateObject = {};
 
     for (const field of allowedFields) {
       const [parent, child] = field.split(".");
       if (child) {
-        // nested (e.g. vitals.heartRate)
-        if (!updateObject[parent]) updateObject[parent] = {};
-        if (req.body[parent] && req.body[parent][child] !== undefined) {
+        updateObject[parent] = updateObject[parent] || {};
+        if (req.body[parent]?.[child] !== undefined) {
           updateObject[parent][child] = req.body[parent][child];
         }
-      } else {
-        if (updates[field] !== undefined) {
-          updateObject[field] = updates[field];
-        }
+      } else if (updates[field] !== undefined) {
+        updateObject[field] = updates[field];
       }
     }
 
-    const updatedUser = await User.findByIdAndUpdate(targetUserId, updateObject, {
-      new: true,
-      runValidators: true,
-    });
+    const updated = await User.findByIdAndUpdate(req.params.id, updateObject, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ message: "User not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+// Get assigned elderly for family
+router.get("/family/assigned", verifyToken, async (req, res) => {
+  try {
+    const elderly = await User.findOne({ assignedFamilyMember: req.user.id }).select("-password");
+    if (!elderly) return res.status(404).json({ message: "No connected elderly found" });
+    res.json(elderly);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Family sends request to elderly
+router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
+  try {
+    const elderly = await User.findById(req.params.elderlyId);
+    if (!elderly) return res.status(404).json({ message: "Elderly not found" });
+
+    if (elderly.pendingFamilyRequests?.includes(req.user.id)) {
+      return res.status(400).json({ message: "Request already sent." });
     }
 
-    res.json(updatedUser);
-  } catch (error) {
-    console.error("❌ Error updating user:", error);
+    elderly.pendingFamilyRequests.push(req.user.id);
+    await elderly.save();
+    res.json({ message: "Family request sent." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Elderly accepts/rejects
+router.post("/respond-family-request/:familyId", verifyToken, async (req, res) => {
+  const { accept } = req.body;
+  try {
+    const elderly = await User.findById(req.user.id);
+    if (!elderly || elderly.role !== "elderly") {
+      return res.status(403).json({ message: "Only elderly users can respond." });
+    }
+
+    elderly.pendingFamilyRequests = elderly.pendingFamilyRequests.filter(id => id.toString() !== req.params.familyId);
+    if (accept) elderly.assignedFamilyMember = req.params.familyId;
+
+    await elderly.save();
+    res.json({ message: accept ? "Request accepted." : "Request rejected." });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Elderly sees pending requests
+router.get("/pending-family-requests", verifyToken, async (req, res) => {
+  try {
+    const elderly = await User.findById(req.user.id).populate("pendingFamilyRequests", "name email");
+    if (!elderly) return res.status(404).json({ message: "Elderly user not found" });
+    res.json(elderly.pendingFamilyRequests);
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });

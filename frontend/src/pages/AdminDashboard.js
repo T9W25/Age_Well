@@ -1,94 +1,125 @@
 import React, { useEffect, useState } from "react";
 import {
-  Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, Button, Paper
+  Container,
+  Typography,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+  Button,
+  Alert,
+  CircularProgress,
+  Chip,
 } from "@mui/material";
-import axios from "axios";
+import DeleteIcon from "@mui/icons-material/Delete";
+import api from "../api";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get("/api/admin/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      setError("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const handleDelete = async (userId) => {
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/users", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      await api.delete(`/api/admin/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(res.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+      setUsers((prev) => prev.filter((u) => u._id !== userId));
+    } catch (err) {
+      setError("Error deleting user");
     }
   };
 
-  const updateUserStatus = async (userId, status) => {
+  const handleToggleStatus = async (userId, status) => {
+    const endpoint = status === "active" ? "deactivate" : "reactivate";
+
     try {
-      await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/status`,
-        { status },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      const res = await api.put(
+        `/api/admin/users/${userId}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchUsers(); // Refresh list
-    } catch (error) {
-      console.error("Error updating user status:", error);
+
+      setUsers((prev) =>
+        prev.map((u) => (u._id === userId ? { ...u, status: res.data.user.status } : u))
+      );
+    } catch (err) {
+      setError("Error updating user status");
     }
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 5 }}>
-      <Typography variant="h4" gutterBottom align="center" fontWeight="bold">
+    <Container sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
         Admin Dashboard
       </Typography>
 
-      <Paper elevation={3} sx={{ overflowX: "auto", p: 3 }}>
+      {error && <Alert severity="error">{error}</Alert>}
+
+      {loading ? (
+        <CircularProgress />
+      ) : (
         <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+          <TableHead>
             <TableRow>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Role</strong></TableCell>
-              <TableCell><strong>Status</strong></TableCell>
-              <TableCell><strong>Actions</strong></TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Role</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>{user.status || "active"}</TableCell>
+            {users.map((u) => (
+              <TableRow key={u._id}>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.role}</TableCell>
                 <TableCell>
-                  {user.status === "pending" ? (
-                    <>
-                      <Button
-                        size="small"
-                        color="success"
-                        onClick={() => updateUserStatus(user._id, "approved")}
-                        sx={{ mr: 1 }}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() => updateUserStatus(user._id, "rejected")}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No Actions
-                    </Typography>
-                  )}
+                  <Chip
+                    label={u.status || "active"}
+                    color={u.status === "deactivated" ? "warning" : "success"}
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color={u.status === "active" ? "warning" : "success"}
+                    onClick={() => handleToggleStatus(u._id, u.status)}
+                    sx={{ mr: 1 }}
+                  >
+                    {u.status === "active" ? "Deactivate" : "Reactivate"}
+                  </Button>
+                  <IconButton color="error" onClick={() => handleDelete(u._id)}>
+                    <DeleteIcon />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </Paper>
+      )}
     </Container>
   );
 };

@@ -8,7 +8,7 @@ import {
   Box,
   Alert,
 } from "@mui/material";
-import axios from "axios";
+import api from "../api";
 import PublicNavbar from "../components/PublicNavbar";
 
 const ContactUs = () => {
@@ -22,7 +22,7 @@ const ContactUs = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/contact", formData);
+      await api.post("/api/contact", formData);
       setSnackbar({
         open: true,
         message: "✅ Message sent successfully!",

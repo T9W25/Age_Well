@@ -7,9 +7,10 @@ import {
   Typography,
   Button,
   Stack,
+  Divider,
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import axios from "axios";
+import api from "../api";
 import notificationSound from "../assets/notification.mp3";
 
 const NotificationBell = ({ userId }) => {
@@ -18,18 +19,19 @@ const NotificationBell = ({ userId }) => {
   const audio = new Audio(notificationSound);
 
   useEffect(() => {
-    if (!userId) return; // ✅ Prevent fetch if userId is undefined
+    if (!userId) return;
+
+    console.log("🔔 NotificationBell - userId in bell:", userId);
 
     const fetchNotifications = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/notifications/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const res = await api.get(`/api/notifications/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        console.log("🔔 Notifications fetched:", res.data);
+
         const unread = res.data.filter((n) => !n.read);
 
         if (unread.length > notifications.length) {
@@ -49,15 +51,11 @@ const NotificationBell = ({ userId }) => {
 
   const handleMarkAsRead = async () => {
     try {
-      await axios.post(
-        `http://localhost:5000/api/notifications/mark-read/${userId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await api.post(`/api/notifications/mark-read/${userId}`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setNotifications([]);
       setAnchorEl(null);
     } catch (error) {
@@ -65,20 +63,25 @@ const NotificationBell = ({ userId }) => {
     }
   };
 
-  const handleRespond = async (notificationId, accept) => {
+  const handleRespond = async (notificationId, type, accept) => {
+    let endpoint = `/api/notifications/respond/${notificationId}`;
+    let payload = { accept };
+
+    if (type === "family_request") {
+      endpoint = `/api/users/respond-family-request/${notificationId}`;
+      payload = { accept };
+    }
+
     try {
-      await axios.post(
-        `http://localhost:5000/api/notifications/respond/${notificationId}`,
-        { accept },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await api.post(endpoint, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
     } catch (error) {
-      console.error("❌ Error responding to caregiver request:", error);
+      console.error("❌ Error responding to request:", error);
     }
   };
 
@@ -101,14 +104,19 @@ const NotificationBell = ({ userId }) => {
           notifications.map((notification, index) => (
             <MenuItem key={index} sx={{ whiteSpace: "normal", maxWidth: 300 }}>
               <Stack spacing={1}>
+                <Typography variant="caption" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
+                  {notification.type.replace("_", " ")}
+                </Typography>
+
                 <Typography variant="body2">{notification.message}</Typography>
-                {notification.type === "request" && (
+
+                {["caregiver_request", "family_request"].includes(notification.type) && (
                   <Stack direction="row" spacing={1}>
                     <Button
                       size="small"
                       variant="contained"
                       color="primary"
-                      onClick={() => handleRespond(notification._id, true)}
+                      onClick={() => handleRespond(notification._id, notification.type, true)}
                     >
                       Accept
                     </Button>
@@ -116,19 +124,22 @@ const NotificationBell = ({ userId }) => {
                       size="small"
                       variant="outlined"
                       color="error"
-                      onClick={() => handleRespond(notification._id, false)}
+                      onClick={() => handleRespond(notification._id, notification.type, false)}
                     >
                       Reject
                     </Button>
                   </Stack>
                 )}
               </Stack>
+              {index < notifications.length - 1 && <Divider sx={{ mt: 1 }} />}
             </MenuItem>
           ))
         )}
 
         {notifications.length > 0 && (
-          <MenuItem onClick={handleMarkAsRead}>Mark All as Read</MenuItem>
+          <MenuItem onClick={handleMarkAsRead} sx={{ justifyContent: "center" }}>
+            Mark All as Read
+          </MenuItem>
         )}
       </Menu>
     </div>

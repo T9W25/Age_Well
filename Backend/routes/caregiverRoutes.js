@@ -69,7 +69,7 @@ router.post("/request-elderly/:elderlyId", verifyToken, verifyCaregiver, async (
   }
 });
 
-// ✅ Elderly accepts/rejects caregiver request (called from Notification)
+// Elderly accepts/rejects caregiver request (called from Notification)
 router.post("/respond-to-request/:notificationId", verifyToken, async (req, res) => {
   try {
     const { notificationId } = req.params;
