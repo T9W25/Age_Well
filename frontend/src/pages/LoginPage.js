@@ -26,7 +26,7 @@ const LoginPage = ({ setUser }) => {
   
 
   const handleAuth = async () => {
-    const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
+    const endpoint = isRegister ? "/auth/register" : "/auth/login";
     const data = isRegister ? { name, email, password, role } : { email, password };
 
     setLoading(true);
