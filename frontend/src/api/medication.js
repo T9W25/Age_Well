@@ -1,4 +1,4 @@
-// src/api/medication.js
+
 import api from "../api";
 
 export const getMedicationSchedule = async (userId) => {
