@@ -51,7 +51,7 @@ const FamilyDashboard = () => {
     }
   
     try {
-      await api.post(`/api/users/request-family/${elderlyId}`, null, {
+      await api.post(`/api/users/request-family/${elderlyId}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("Request sent!");
