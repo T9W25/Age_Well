@@ -38,7 +38,7 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/vitals", require("./routes/vitalsRoutes"));
 const contactRoutes = require("./routes/contactRoutes");
 app.use("/api/contact", contactRoutes);
-app.use("/api/users", require("./routes/familyRoutes"));
+
 
 
 // ✅ Medication test utilities (optional)

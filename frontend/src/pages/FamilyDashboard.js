@@ -35,21 +35,19 @@ const FamilyDashboard = () => {
       const res = await api.get(`/api/users/search?name=${searchQuery}&role=elderly`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      console.log("Search Results:", res.data); // ✅ ADD THIS
       setSearchResults(res.data);
     } catch (error) {
       console.error("Search error:", error);
       setError("Search failed.");
     }
   };
-  
+
   const handleSendRequest = async (elderlyId) => {
-    console.log("📨 Sending request to:", elderlyId); // ✅ ADD THIS
     if (!elderlyId) {
       setError("Missing elderly ID");
       return;
     }
-  
+
     try {
       await api.post(`/api/users/request-family/${elderlyId}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -57,10 +55,9 @@ const FamilyDashboard = () => {
       alert("Request sent!");
     } catch (error) {
       console.error("Failed to send request:", error);
-      setError("Could not send request.");
+      setError(error.response?.data?.message || "Could not send request.");
     }
   };
-  
 
   const handleViewDetails = () => {
     if (assignedElderly?._id) {
@@ -79,7 +76,7 @@ const FamilyDashboard = () => {
       {assignedElderly && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Typography variant="h6">🎯 Assigned Elderly:</Typography>
+            <Typography variant="h6">🌟 Assigned Elderly:</Typography>
             <Typography>Name: {assignedElderly.name}</Typography>
             <Typography>Email: {assignedElderly.email}</Typography>
             <Button variant="contained" sx={{ mt: 1 }} onClick={handleViewDetails}>
