@@ -35,14 +35,21 @@ const FamilyDashboard = () => {
       const res = await api.get(`/api/users/search?name=${searchQuery}&role=elderly`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
+      console.log("Search Results:", res.data); // ✅ ADD THIS
       setSearchResults(res.data);
     } catch (error) {
       console.error("Search error:", error);
       setError("Search failed.");
     }
   };
-
+  
   const handleSendRequest = async (elderlyId) => {
+    console.log("📨 Sending request to:", elderlyId); // ✅ ADD THIS
+    if (!elderlyId) {
+      setError("Missing elderly ID");
+      return;
+    }
+  
     try {
       await api.post(`/api/users/request-family/${elderlyId}`, null, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -53,6 +60,7 @@ const FamilyDashboard = () => {
       setError("Could not send request.");
     }
   };
+  
 
   const handleViewDetails = () => {
     if (assignedElderly?._id) {
