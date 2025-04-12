@@ -130,21 +130,35 @@ router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
 });
 
 // Elderly accepts/rejects
-router.post("/respond-family-request/:familyId", verifyToken, async (req, res) => {
-  const { accept } = req.body;
+// Family sends request to elderly
+router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
   try {
-    const elderly = await User.findById(req.user.id);
-    if (!elderly || elderly.role !== "elderly") {
-      return res.status(403).json({ message: "Only elderly users can respond." });
+    // ✅ Ensure only family members can send the request
+    if (req.user.role !== "family") {
+      return res.status(403).json({ message: "Only family members can send requests." });
     }
 
-    elderly.pendingFamilyRequests = elderly.pendingFamilyRequests.filter(id => id.toString() !== req.params.familyId);
-    if (accept) elderly.assignedFamilyMember = req.params.familyId;
+    const elderly = await User.findById(req.params.elderlyId);
+    if (!elderly || elderly.role !== "elderly") {
+      return res.status(404).json({ message: "Elderly user not found." });
+    }
 
+    // ✅ Prevent duplicate requests using ObjectId-safe comparison
+    const alreadyRequested = elderly.pendingFamilyRequests?.some(
+      (id) => id.toString() === req.user.id
+    );
+    if (alreadyRequested) {
+      return res.status(400).json({ message: "Request already sent." });
+    }
+
+    elderly.pendingFamilyRequests = elderly.pendingFamilyRequests || [];
+    elderly.pendingFamilyRequests.push(req.user.id);
     await elderly.save();
-    res.json({ message: accept ? "Request accepted." : "Request rejected." });
+
+    res.status(200).json({ message: "Family request sent." });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Error sending family request:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
