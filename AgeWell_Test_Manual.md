@@ -1,6 +1,6 @@
 # 📝 AgeWell Test Documentation Manual  
-**Version**: 1.0  
-**Date**: April 2, 2025  
+**Version**: 2.0  
+**Date**: April 10, 2025  
 
 ---
 
@@ -95,7 +95,23 @@
 
 ---
 
-### 🍽 **User Story 6: As a Primary Caregiver, I want to CRUD Elderly Diet Plans**  
+### 🍽 **User Story 6: As a Primary Caregiver, I want to get notification for missed medication**  
+
+**Acceptance Criteria:**  
+- The system checks if elderly users have acknowledged their medication.  
+- Caregivers receive a notification for any missed dose.  
+
+#### 🧪 Test Cases  
+
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-018 | Elderly skips medication         | Caregiver receives alert             |
+| TC-019 | Medication marked as taken       | No alert triggered                   |
+| TC-020 | View missed dose history         | Missed logs appear in caregiver UI   |
+
+---
+
+### 🍴 **User Story 7: As a Primary Caregiver, I want to CRUD Elderly Diet Plans**  
 
 **Acceptance Criteria:**  
 - Caregivers can create, update, and delete diet plans.  
@@ -105,14 +121,14 @@
 
 | ID     | Test Case                        | Expected Result                      |
 |--------|----------------------------------|--------------------------------------|
-| TC-018 | Open Diet Plan section           | Current diet plan is visible         |
-| TC-019 | Add a new diet plan              | Plan appears in elderly’s UI         |
-| TC-020 | Edit meal details                | Updates reflected in UI & DB         |
-| TC-021 | Elderly tries to modify plan     | Access denied                        |
+| TC-021 | Open Diet Plan section           | Current diet plan is visible         |
+| TC-022 | Add a new diet plan              | Plan appears in elderly’s UI         |
+| TC-023 | Edit meal details                | Updates reflected in UI & DB         |
+| TC-024 | Elderly tries to modify plan     | Access denied                        |
 
 ---
 
-### 📅 **User Story 7: As a Primary Caregiver, I want to CRUD Schedules**  
+### 🕓 **User Story 8: As a Primary Caregiver, I want to CRUD Schedules**  
 
 **Acceptance Criteria:**  
 - Caregivers can create, update, and delete schedules.  
@@ -122,37 +138,99 @@
 
 | ID     | Test Case                        | Expected Result                      |
 |--------|----------------------------------|--------------------------------------|
-| TC-022 | Open Schedules page              | List of schedules is visible         |
-| TC-023 | Add a new schedule               | Schedule appears in elderly’s UI     |
-| TC-024 | Modify an existing schedule      | Updates saved                        |
-| TC-025 | Delete a schedule                | Entry removed from UI and DB         |
+| TC-025 | Open Schedules page              | List of schedules is visible         |
+| TC-026 | Add a new schedule               | Schedule appears in elderly’s UI     |
+| TC-027 | Modify an existing schedule      | Updates saved                        |
+| TC-028 | Delete a schedule                | Entry removed from UI and DB         |
 
 ---
 
-### 💳 **User Story 8: As an Unregistered User, I want to explore monthly subscriptions and app features**  
+### 💳 **User Story 9: As an Unregistered User, I want to explore monthly subscriptions and app features**  
 
 **Acceptance Criteria:**  
 - Subscription plans are displayed without login.  
 - Users can browse features but not interact.  
-- Signup button is available for conversion.  
 
 #### 🧪 Test Cases  
 
 | ID     | Test Case                        | Expected Result                      |
 |--------|----------------------------------|--------------------------------------|
-| TC-026 | Open app without logging in      | Subscription plans are visible       |
-| TC-027 | Click on a feature (e.g., diet plan) | Prompt to sign up appears |
-| TC-028 | Click "Subscribe"                | Redirects to checkout page           |
+| TC-029 | Open app without logging in      | Subscription plans are visible       |
+| TC-030 | Click on a feature (e.g., diet plan) | Prompt to sign up appears        |
+| TC-031 | Click "Subscribe"                | Redirects to checkout page           |
+
+---
+
+### 🧑‍⚕️ **User Story 10: As a Healthcare Professional, I want to CRUD patient health details and prescriptions**  
+
+**Acceptance Criteria:**  
+- Can update patient health records and prescribe medication.  
+- Only healthcare professionals have access to this feature.  
+
+#### 🧪 Test Cases  
+
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-032 | View patient record              | Health details shown in full         |
+| TC-033 | Update vitals or history         | Info saved and visible to others     |
+| TC-034 | Add/edit/delete prescription     | Reflected in patient's medication UI |
+
+---
+
+### 📅 **User Story 11: As a Healthcare Professional, I want to schedule appointment meetings**  
+
+**Acceptance Criteria:**  
+- Can schedule and view appointments with elderly users.  
+- Conflicting appointment times are prevented.  
+
+#### 🧪 Test Cases  
+
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-035 | Create new appointment           | Appears on both user and professional’s calendar |
+| TC-036 | Modify appointment details       | Changes saved in system              |
+| TC-037 | Overlap time check               | Error message shown                  |
+
+---
+
+### 🚨 **User Story 12: As a Family Member, I want to receive notification of critical health alerts**  
+
+**Acceptance Criteria:**  
+- Get notified when vital signs are abnormal or emergencies occur.  
+- Option to turn off certain notifications.  
+
+#### 🧪 Test Cases  
+
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-038 | Abnormal BP reading              | Alert sent to family member          |
+| TC-039 | Emergency button used            | Family receives alert                |
+| TC-040 | Turn off notifications           | No alerts received                   |
+
+---
+
+### 📊 **User Story 13: As a Family Member, I want to view Elderly Health Summary**  
+
+**Acceptance Criteria:**  
+- View a dashboard summarizing the elderly’s health metrics.  
+- Limited to view-only access.  
+
+#### 🧪 Test Cases  
+
+| ID     | Test Case                        | Expected Result                      |
+|--------|----------------------------------|--------------------------------------|
+| TC-041 | Open health summary page         | Summary dashboard loads              |
+| TC-042 | Attempt to edit details          | Access denied message shown          |
 
 ---
 
 ## 🔐 **Security & Authentication Tests**  
 
-| ID     | Test Case                        | Expected Result                      |
+| ID     | Test Case                         | Expected Result                      |
 |--------|----------------------------------|--------------------------------------|
-| TC-029 | JWT included in API requests    | Backend verifies authentication     |
-| TC-030 | Unauthorized access attempt     | Redirected to login page            |
-| TC-031 | Admin modifies caregiver role   | Role updates correctly              |
+| TC-043 | JWT included in API requests     | Backend verifies authentication     |
+| TC-044 | Unauthorized access attempt      | Redirected to login page            |
+| TC-045 | Admin modifies caregiver role    | Role updates correctly              |
 
 ---
 
@@ -160,17 +238,17 @@
 
 | ID     | Test Case                        | Expected Result                      |
 |--------|----------------------------------|--------------------------------------|
-| TC-032 | Open app on desktop              | Layout adapts to full screen        |
-| TC-033 | Open app on mobile               | Layout adjusts for small screens    |
-| TC-034 | Navigation between sections      | Smooth transitions between pages    |
-| TC-035 | Dark mode toggle                 | UI switches themes correctly        |
+| TC-046 | Open app on desktop              | Layout adapts to full screen        |
+| TC-047 | Open app on mobile               | Layout adjusts for small screens    |
+| TC-048 | Navigation between sections      | Smooth transitions between pages    |
+| TC-049 | Dark mode toggle                 | UI switches themes correctly        |
 
 ---
 
 ## 🛠 **Post-Test Cleanup Steps**  
 
 - Delete test users from the database.  
-- Reset check-in and emergency logs.  
-- Verify API logs for any errors.  
+- Reset check-in, vitals, and prescription data.  
+- Clear mock notifications and appointments.  
 
 ---
