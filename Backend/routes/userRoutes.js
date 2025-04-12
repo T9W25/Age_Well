@@ -111,26 +111,7 @@ router.get("/family/assigned", verifyToken, async (req, res) => {
   }
 });
 
-// Family sends request to elderly
-router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
-  try {
-    const elderly = await User.findById(req.params.elderlyId);
-    if (!elderly) return res.status(404).json({ message: "Elderly not found" });
 
-    if (elderly.pendingFamilyRequests?.includes(req.user.id)) {
-      return res.status(400).json({ message: "Request already sent." });
-    }
-
-    elderly.pendingFamilyRequests.push(req.user.id);
-    await elderly.save();
-    res.json({ message: "Family request sent." });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Elderly accepts/rejects
-// Family sends request to elderly
 router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
   try {
     // ✅ Ensure only family members can send the request
@@ -143,21 +124,64 @@ router.post("/request-family/:elderlyId", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Elderly user not found." });
     }
 
-    // ✅ Prevent duplicate requests using ObjectId-safe comparison
-    const alreadyRequested = elderly.pendingFamilyRequests?.some(
-      (id) => id.toString() === req.user.id
-    );
-    if (alreadyRequested) {
+    // ✅ Prevent duplicate requests
+    const existingNotification = await Notification.findOne({
+      userId: elderly._id,
+      senderId: req.user.id,
+      type: "family_request",
+      read: false
+    });
+
+    if (existingNotification) {
       return res.status(400).json({ message: "Request already sent." });
     }
 
-    elderly.pendingFamilyRequests = elderly.pendingFamilyRequests || [];
-    elderly.pendingFamilyRequests.push(req.user.id);
-    await elderly.save();
+    // ✅ Send family request as a notification
+    await Notification.create({
+      userId: elderly._id,
+      senderId: req.user.id,
+      message: `${req.user.name} is requesting to connect with you as a family member.`,
+      type: "family_request"
+    });
 
     res.status(200).json({ message: "Family request sent." });
   } catch (err) {
     console.error("❌ Error sending family request:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+// ✅ Elderly accepts/rejects family request (via notification)
+router.post("/respond-family-request/:notificationId", verifyToken, async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const { accept } = req.body;
+
+    const notification = await Notification.findById(notificationId);
+    if (!notification || notification.type !== "family_request") {
+      return res.status(404).json({ message: "Family request notification not found" });
+    }
+
+    const elderly = await User.findById(notification.userId);
+    const family = await User.findById(notification.senderId);
+
+    if (!elderly || elderly.role !== "elderly" || !family || family.role !== "family") {
+      return res.status(400).json({ message: "Invalid user roles" });
+    }
+
+    if (req.user.id !== elderly._id.toString()) {
+      return res.status(403).json({ message: "Only the elderly can respond to this request" });
+    }
+
+    if (accept) {
+      elderly.assignedFamilyMember = family._id;
+      await elderly.save();
+    }
+
+    await notification.deleteOne(); // ✅ Remove the notification after response
+    res.json({ message: accept ? "Family request accepted." : "Family request rejected." });
+  } catch (err) {
+    console.error("❌ Error responding to family request:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });

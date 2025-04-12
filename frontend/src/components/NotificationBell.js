@@ -21,8 +21,6 @@ const NotificationBell = ({ userId }) => {
   useEffect(() => {
     if (!userId) return;
 
-    console.log("🔔 NotificationBell - userId in bell:", userId);
-
     const fetchNotifications = async () => {
       try {
         const res = await api.get(`/api/notifications/${userId}`, {
@@ -30,17 +28,14 @@ const NotificationBell = ({ userId }) => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        console.log("🔔 Notifications fetched:", res.data);
 
         const unread = res.data.filter((n) => !n.read);
-
         if (unread.length > notifications.length) {
           audio.play();
         }
-
         setNotifications(unread);
       } catch (error) {
-        console.error("❌ Error fetching notifications:", error);
+        console.error("Error fetching notifications:", error);
       }
     };
 
@@ -59,30 +54,31 @@ const NotificationBell = ({ userId }) => {
       setNotifications([]);
       setAnchorEl(null);
     } catch (error) {
-      console.error("❌ Error marking notifications as read:", error);
+      console.error("Error marking notifications as read:", error);
     }
   };
 
   const handleRespond = async (notificationId, type, accept) => {
     let endpoint = `/api/notifications/respond/${notificationId}`;
-    let payload = { accept };
-
     if (type === "family_request") {
       endpoint = `/api/users/respond-family-request/${notificationId}`;
-      payload = { accept };
     }
-
     try {
-      await api.post(endpoint, payload, {
+      await api.post(endpoint, { accept }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
     } catch (error) {
-      console.error("❌ Error responding to request:", error);
+      console.error("Error responding to request:", error);
     }
+  };
+
+  const formatTypeLabel = (type) => {
+    if (type === "caregiver_request") return "Caregiver Request";
+    if (type === "family_request") return "Family Request";
+    return type;
   };
 
   return (
@@ -105,12 +101,13 @@ const NotificationBell = ({ userId }) => {
             <MenuItem key={index} sx={{ whiteSpace: "normal", maxWidth: 300 }}>
               <Stack spacing={1}>
                 <Typography variant="caption" sx={{ fontWeight: "bold", textTransform: "uppercase" }}>
-                  {notification.type.replace("_", " ")}
+                  {formatTypeLabel(notification.type)}
                 </Typography>
-
                 <Typography variant="body2">{notification.message}</Typography>
-
-                {["caregiver_request", "family_request"].includes(notification.type) && (
+                {[
+                  "caregiver_request",
+                  "family_request",
+                ].includes(notification.type) && (
                   <Stack direction="row" spacing={1}>
                     <Button
                       size="small"
